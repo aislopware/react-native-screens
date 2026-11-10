@@ -1,15 +1,15 @@
-## T3 integration fork
+## Onicode fork
 
-`main` mirrors [upstream main](https://github.com/software-mansion/react-native-screens).
-[`t3/main`](https://github.com/juliusmarminge/react-native-screens/tree/t3/main) combines
-upstream, the split-stack prototype and the T3 integration changes. Keep generic
-fixes in their upstream proposal branches, then merge them into `t3/main`.
+[Onicode](https://github.com/aislopware/onicode) builds its mobile app against
+`main` here: [upstream](https://github.com/software-mansion/react-native-screens)
+plus the split-stack prototype and Onicode's integration changes. Keep generic
+fixes in their upstream proposal branches, then merge them into `main`.
 
-To create an app dependency, increment `package.json` to a new `5.0.0-t3.N`
-version, set `t3Fork.upstreamCommit` to the integrated upstream base and commit all source changes. With Node 24 and the repository's pinned
-Yarn, run `yarn pack:t3 /absolute/output/directory`. The command installs the
+To create an app dependency, increment `package.json` to a new `5.0.0-oni.N`
+version, set `oniFork.upstreamCommit` to the integrated upstream base and commit all source changes. With Node 24 and the repository's pinned
+Yarn, run `yarn pack:onicode /absolute/output/directory`. The command installs the
 locked dependencies, builds JavaScript and declarations, and packs the native
-sources. It requires a clean checkout and includes `t3-fork.json` with the source
+sources. It requires a clean checkout and includes `oni-fork.json` with the source
 commit, upstream base and package version. Copy the generated `.tgz` into the
 app's dependency directory and update its `file:` dependency and lockfile.
 

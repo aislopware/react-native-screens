@@ -124,7 +124,7 @@ class ScreenStackHeaderConfigViewManager :
         config.setTitle(title)
     }
 
-    // The t3 patch adds these iOS glass-chrome props to the native spec; they have
+    // The Onicode fork adds these iOS glass-chrome props to the native spec; they have
     // no Android implementation, but the codegen-generated interface requires the
     // setters to exist. No-ops keep the Android build compiling.
     override fun setSubtitle(
