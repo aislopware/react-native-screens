@@ -12,16 +12,34 @@ typedef NS_ENUM(NSInteger, RNSHeaderIconType) {
   RNSHeaderIconTypeTemplateSource,
 };
 
+/**
+ * Image source of `RNSHeaderIconTypeImageSource` / `RNSHeaderIconTypeTemplateSource` icons.
+ */
+typedef struct {
+  /**
+   * Loaded through `RNSImageLoading`. Opaque to `core`.
+   */
+  __strong id _Nullable source;
+
+  /**
+   * Size and scale the source declares, used for a placeholder until the image loads. Zero when not declared.
+   */
+  CGSize size;
+  CGFloat scale;
+} RNSHeaderIconImageSource;
+
 @interface RNSHeaderIconData : NSObject
 
 @property (nonatomic, readonly) RNSHeaderIconType iconType;
 @property (nonatomic, copy, readonly, nullable) NSString *resourceName;
-@property (nonatomic, copy, readonly, nullable) NSDictionary *jsonSource;
+
+@property (nonatomic, readonly) RNSHeaderIconImageSource imageSource;
+
 @property (nonatomic, strong, nullable) UIImage *resolvedImage;
 
 - (instancetype)initWithType:(RNSHeaderIconType)iconType
                 resourceName:(nullable NSString *)resourceName
-                  jsonSource:(nullable NSDictionary *)jsonSource;
+                 imageSource:(RNSHeaderIconImageSource)imageSource;
 
 @end
 

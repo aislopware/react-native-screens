@@ -1,0 +1,266 @@
+#import "RNSSplitAppearanceApplicator.h"
+
+#import "RNSAssert.h"
+#import "RNSDefines.h"
+#import "RNSSplitHostController.h"
+
+@implementation RNSSplitAppearanceApplicator
+
+static BOOL RNSSplitSizeIsPortrait(CGSize size)
+{
+  return size.height > size.width;
+}
+
+static UISplitViewControllerSplitBehavior RNSSplitBehaviorForSize(
+    id<RNSSplitHostAppearanceProvider> provider,
+    CGSize size)
+{
+  const auto portrait = provider.portraitPreferredSplitBehavior;
+  return RNSSplitSizeIsPortrait(size) && portrait != UISplitViewControllerSplitBehaviorAutomatic
+      ? portrait
+      : provider.preferredSplitBehavior;
+}
+
+static UISplitViewControllerDisplayMode RNSSplitDisplayModeForSize(
+    id<RNSSplitHostAppearanceProvider> provider,
+    CGSize size)
+{
+  const auto portrait = provider.portraitPreferredDisplayMode;
+  return RNSSplitSizeIsPortrait(size) && portrait != UISplitViewControllerDisplayModeAutomatic
+      ? portrait
+      : provider.preferredDisplayMode;
+}
+
+- (void)applyOrientationAppearanceFor:(id<RNSSplitHostAppearanceProvider>)provider
+                       withController:(RNSSplitHostController *)splitHostController
+                               toSize:(CGSize)size
+{
+  if (provider == nil) {
+    return;
+  }
+  // UIKit lays the columns out for the new size inside the transition's animation, so plain assignments here
+  // animate with it.
+  const auto splitBehavior = RNSSplitBehaviorForSize(provider, size);
+  if (splitHostController.preferredSplitBehavior != splitBehavior) {
+    splitHostController.preferredSplitBehavior = splitBehavior;
+  }
+  const auto displayMode = RNSSplitDisplayModeForSize(provider, size);
+  if (splitHostController.preferredDisplayMode != displayMode) {
+    splitHostController.preferredDisplayMode = displayMode;
+  }
+}
+
+- (void)updateAppearanceIfNeeded:(id<RNSSplitHostAppearanceProvider>)provider
+             splitHostController:(RNSSplitHostController *)splitHostController
+           appearanceCoordinator:(RNSSplitAppearanceCoordinator *)appearanceCoordinator
+{
+  __weak auto weakSelf = self;
+
+  [appearanceCoordinator updateIfNeeded:RNSSplitAppearanceUpdateFlagsGeneralUpdate
+                         updateCallback:^{
+                           auto strongSelf = weakSelf;
+                           if (strongSelf == nil) {
+                             return;
+                           }
+
+                           [strongSelf updateSplitViewConfigurationFor:provider withController:splitHostController];
+                         }];
+
+  [appearanceCoordinator updateIfNeeded:RNSSplitAppearanceUpdateFlagsSecondaryScreenNavBarUpdate
+                         updateCallback:^{
+                           auto strongSelf = weakSelf;
+                           if (strongSelf == nil) {
+                             return;
+                           }
+
+                           [splitHostController refreshSecondaryNavBar];
+                         }];
+
+  [appearanceCoordinator updateIfNeeded:RNSSplitAppearanceUpdateFlagsDisplayModeUpdate
+                         updateCallback:^{
+                           auto strongSelf = weakSelf;
+                           if (strongSelf == nil) {
+                             return;
+                           }
+
+                           [strongSelf updateSplitViewDisplayModeFor:provider withController:splitHostController];
+                         }];
+
+  [appearanceCoordinator
+      updateIfNeeded:RNSSplitAppearanceUpdateFlagsOrientationUpdate
+      updateCallback:^{
+        [splitHostController.orientationDelegate containerDidRequestOrientationUpdate:splitHostController];
+      }];
+}
+
+/**
+ * @brief Function that applies all basic updates.
+ *
+ * It calls all setters on RNSSplitHostController that doesn't require any custom logic and conditions to be met.
+ *
+ * @param provider The provider of the appearance configuration.
+ * @param splitHostController The controller associated with the SplitView component which receives updates and
+ * manages the native layer.
+ */
+- (void)updateSplitViewConfigurationFor:(id<RNSSplitHostAppearanceProvider>)provider
+                         withController:(RNSSplitHostController *)splitHostController
+{
+  // Step 1 - general settings
+  splitHostController.displayModeButtonVisibility = provider.displayModeButtonVisibility;
+  splitHostController.preferredSplitBehavior =
+      RNSSplitBehaviorForSize(provider, splitHostController.viewIfLoaded.bounds.size);
+  splitHostController.overrideUserInterfaceStyle = provider.colorScheme;
+#if !TARGET_OS_TV
+  splitHostController.primaryBackgroundStyle = provider.primaryBackgroundStyle;
+#endif
+  splitHostController.presentsWithGesture = provider.presentsWithGesture;
+  splitHostController.primaryEdge = provider.primaryEdge;
+  splitHostController.showsSecondaryOnlyButton = provider.showSecondaryToggleButton;
+
+  // Step 2.1 - validating column constraints
+  [self validateColumnConstraintsWithMinWidth:provider.minimumPrimaryColumnWidth
+                                     maxWidth:provider.maximumPrimaryColumnWidth];
+
+  [self validateColumnConstraintsWithMinWidth:provider.minimumSupplementaryColumnWidth
+                                     maxWidth:provider.maximumSupplementaryColumnWidth];
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(26_0) && !TARGET_OS_TV
+  if (@available(iOS 26.0, *)) {
+    [self validateColumnConstraintsWithMinWidth:provider.minimumInspectorColumnWidth
+                                       maxWidth:provider.maximumInspectorColumnWidth];
+  }
+#endif
+
+  // Step 2.2 - applying updates to columns
+  if (provider.minimumPrimaryColumnWidth >= 0) {
+    splitHostController.minimumPrimaryColumnWidth = provider.minimumPrimaryColumnWidth;
+  }
+
+  if (provider.maximumPrimaryColumnWidth >= 0) {
+    splitHostController.maximumPrimaryColumnWidth = provider.maximumPrimaryColumnWidth;
+  }
+
+  if (provider.preferredPrimaryColumnWidthOrFraction >= 0 && provider.preferredPrimaryColumnWidthOrFraction < 1) {
+    splitHostController.preferredPrimaryColumnWidthFraction = provider.preferredPrimaryColumnWidthOrFraction;
+  } else if (provider.preferredPrimaryColumnWidthOrFraction >= 1) {
+    splitHostController.preferredPrimaryColumnWidth = provider.preferredPrimaryColumnWidthOrFraction;
+  }
+
+  if (provider.minimumSupplementaryColumnWidth >= 0) {
+    splitHostController.minimumSupplementaryColumnWidth = provider.minimumSupplementaryColumnWidth;
+  }
+
+  if (provider.maximumSupplementaryColumnWidth >= 0) {
+    splitHostController.maximumSupplementaryColumnWidth = provider.maximumSupplementaryColumnWidth;
+  }
+
+  if (provider.preferredSupplementaryColumnWidthOrFraction >= 0 &&
+      provider.preferredSupplementaryColumnWidthOrFraction < 1) {
+    splitHostController.preferredSupplementaryColumnWidthFraction =
+        provider.preferredSupplementaryColumnWidthOrFraction;
+  } else if (provider.preferredSupplementaryColumnWidthOrFraction >= 1) {
+    splitHostController.preferredSupplementaryColumnWidth = provider.preferredSupplementaryColumnWidthOrFraction;
+  }
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(26_0) && !TARGET_OS_TV
+  if (@available(iOS 26.0, *)) {
+    if (provider.minimumSecondaryColumnWidth >= 0) {
+      splitHostController.minimumSecondaryColumnWidth = provider.minimumSecondaryColumnWidth;
+    }
+
+    if (provider.preferredSecondaryColumnWidthOrFraction >= 0 && provider.preferredSecondaryColumnWidthOrFraction < 1) {
+      splitHostController.preferredSecondaryColumnWidthFraction = provider.preferredSecondaryColumnWidthOrFraction;
+    } else if (provider.preferredSecondaryColumnWidthOrFraction >= 1) {
+      splitHostController.preferredSecondaryColumnWidth = provider.preferredSecondaryColumnWidthOrFraction;
+    }
+
+    if (provider.minimumInspectorColumnWidth >= 0) {
+      splitHostController.minimumInspectorColumnWidth = provider.minimumInspectorColumnWidth;
+    }
+
+    if (provider.maximumInspectorColumnWidth >= 0) {
+      splitHostController.maximumInspectorColumnWidth = provider.maximumInspectorColumnWidth;
+    }
+
+    if (provider.preferredInspectorColumnWidthOrFraction >= 0 && provider.preferredInspectorColumnWidthOrFraction < 1) {
+      splitHostController.preferredInspectorColumnWidthFraction = provider.preferredInspectorColumnWidthOrFraction;
+    } else if (provider.preferredInspectorColumnWidthOrFraction >= 1) {
+      splitHostController.preferredInspectorColumnWidth = provider.preferredInspectorColumnWidthOrFraction;
+    }
+  }
+#endif
+
+  // Step 2.3 - manipulating with inspector column
+  [splitHostController toggleSplitViewInspector:provider.showInspector];
+}
+
+/**
+ * @brief Function that updates `preferredDisplayMode` property on SplitView.
+ *
+ * `preferredDisplayMode` needs to have a dedicated flag to prevent updates from the JS, when other props updates the
+ * appearance. It is crucial in the case, when `preferredDisplayMode` has changed due to some transition that was
+ * executed natively, e. g. after showing/hiding a column by a swipe. In that case, any prop update incoming, would
+ * reset `preferredDisplayMode` to the state from JS, what doesn't look good.
+ *
+ * @param provider The provider of the appearance configuration.
+ * @param splitHostController The controller associated with the SplitView component which receives updates and
+ * manages the native layer.
+ */
+- (void)updateSplitViewDisplayModeFor:(id<RNSSplitHostAppearanceProvider>)provider
+                       withController:(RNSSplitHostController *)splitHostController
+{
+  const auto preferredDisplayMode = RNSSplitDisplayModeForSize(provider, splitHostController.viewIfLoaded.bounds.size);
+  if (splitHostController.preferredDisplayMode == preferredDisplayMode) {
+    return;
+  }
+
+  UIView *view = splitHostController.viewIfLoaded;
+  // Animate an already displayed split; initial configuration and compact
+  // column navigation must not start a sidebar transition.
+  const BOOL shouldAnimate = view.window != nil && !splitHostController.isCollapsed &&
+      splitHostController.preferredDisplayMode != UISplitViewControllerDisplayModeAutomatic &&
+      !UIAccessibilityIsReduceMotionEnabled();
+  if (!shouldAnimate) {
+    splitHostController.preferredDisplayMode = preferredDisplayMode;
+    return;
+  }
+
+  // UIKit's column transition also moves floating search toolbars. A UIView
+  // animation of preferredDisplayMode alone leaves those controls ahead of the sidebar.
+  if (splitHostController.style == UISplitViewControllerStyleDoubleColumn &&
+      (preferredDisplayMode == UISplitViewControllerDisplayModeOneBesideSecondary ||
+       preferredDisplayMode == UISplitViewControllerDisplayModeSecondaryOnly)) {
+    if (preferredDisplayMode == UISplitViewControllerDisplayModeSecondaryOnly) {
+      [splitHostController hideColumn:UISplitViewControllerColumnPrimary];
+    } else {
+      [splitHostController showColumn:UISplitViewControllerColumnPrimary];
+    }
+    splitHostController.preferredDisplayMode = preferredDisplayMode;
+    return;
+  }
+
+  [view layoutIfNeeded];
+  [UIView animateWithDuration:0.35
+                        delay:0
+                      options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction |
+                          UIViewAnimationOptionCurveEaseInOut
+                   animations:^{
+                     splitHostController.preferredDisplayMode = preferredDisplayMode;
+                     [view layoutIfNeeded];
+                   }
+                   completion:nil];
+}
+
+- (void)validateColumnConstraintsWithMinWidth:(CGFloat)minWidth maxWidth:(CGFloat)maxWidth
+{
+  // Compare values only if both are non-negative.
+  // The default value, which is -1, indicates that the constraint was not provided.
+  if (minWidth >= 0 && maxWidth >= 0) {
+    RNSAssert(minWidth <= maxWidth,
+              @"[RNScreens] Split column constraints are invalid: minWidth %f cannot be greater than maxWidth %f",
+              minWidth,
+              maxWidth);
+  }
+}
+
+@end

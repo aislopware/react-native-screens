@@ -4,7 +4,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol RNSSplitColumnFrameObserverDelegate;
+@protocol RNSViewFrameChangeDelegate;
 
 /**
  * @class RNSSplitColumnFrameObserver
@@ -13,7 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface RNSSplitColumnFrameObserver : NSObject
 
 - (instancetype)initWithNavigationController:(UINavigationController *)navigationController
-                                    delegate:(nullable id<RNSSplitColumnFrameObserverDelegate>)delegate;
+                                    delegate:(nullable id<RNSViewFrameChangeDelegate>)delegate;
 
 /**
  * Registers KVO for the frame of navigation controller's view.

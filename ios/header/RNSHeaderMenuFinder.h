@@ -2,7 +2,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "RNSHeaderItemComponentView.h"
+#import "RNSHeaderItemDataProviding.h"
 #import "RNSHeaderMenuData.h"
 
 NS_ASSUME_NONNULL_BEGIN

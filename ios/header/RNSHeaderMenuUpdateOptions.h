@@ -8,7 +8,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /**
- * Typed options parsed from command dictionary for menu item updates.
+ * Typed options for menu item updates.
  * `has*` flags distinguish "no change" (key absent) from "reset" (key present, null value).
  */
 @interface RNSMenuItemUpdateOptions : NSObject
@@ -22,14 +22,21 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL hasState;
 @property (nonatomic, readonly) UIMenuElementState state;
 
-+ (instancetype)fromDictionary:(NSDictionary *)dict;
+- (instancetype)initWithTitle:(nullable NSString *)title
+                     hasTitle:(BOOL)hasTitle
+                         icon:(nullable RNSHeaderIconData *)icon
+                      hasIcon:(BOOL)hasIcon
+               hasToggleState:(BOOL)hasToggleState
+                  toggleState:(BOOL)toggleState
+                     hasState:(BOOL)hasState
+                        state:(UIMenuElementState)state;
 
 + (RNSHeaderMenuItemData *)applyOptions:(RNSMenuItemUpdateOptions *)options toMenuItem:(RNSHeaderMenuItemData *)old;
 
 @end
 
 /**
- * Typed options parsed from command dictionary for submenu updates.
+ * Typed options for submenu updates.
  * `has*` flags distinguish "no change" (key absent) from "reset" (key present, null value).
  */
 @interface RNSMenuUpdateOptions : NSObject
@@ -39,7 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL hasIcon;
 @property (nonatomic, strong, readonly, nullable) RNSHeaderIconData *icon;
 
-+ (instancetype)fromDictionary:(NSDictionary *)dict;
+- (instancetype)initWithTitle:(nullable NSString *)title
+                     hasTitle:(BOOL)hasTitle
+                         icon:(nullable RNSHeaderIconData *)icon
+                      hasIcon:(BOOL)hasIcon;
 
 + (RNSHeaderMenuData *)applyOptions:(RNSMenuUpdateOptions *)options toMenu:(RNSHeaderMenuData *)old;
 

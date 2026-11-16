@@ -1,67 +1,168 @@
-import type { NativeSyntheticEvent, ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
+import type { EmptyEventPayload, NativeEventHandler } from '../shared/types';
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-type GenericEmptyEvent = Readonly<{}>;
-
+/**
+ * Kind of a Split column.
+ *
+ * @remarks
+ * The following values are supported:
+ * - `'column'` — a column declared with {@link Split.Column}.
+ * - `'inspector'` — the inspector column declared with
+ *   {@link Split.Inspector}.
+ */
 export type SplitScreenColumnType = 'column' | 'inspector';
 
+/**
+ * Props for {@link Split.Column}.
+ *
+ * @experimental
+ */
+export interface SplitColumnProps extends ViewProps {
+  /**
+   * Content of the column.
+   *
+   * @platform ios
+   */
+  children?: React.ReactNode | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Column` did appear.
+   *
+   * @remarks
+   * This is called as soon as the transition ends.
+   *
+   * @platform ios
+   */
+  onDidAppear?: NativeEventHandler<EmptyEventPayload> | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Column` did disappear.
+   *
+   * @remarks
+   * This is called as soon as the transition ends.
+   *
+   * @platform ios
+   */
+  onDidDisappear?: NativeEventHandler<EmptyEventPayload> | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Column` will appear.
+   *
+   * @remarks
+   * This is called as soon as the transition begins.
+   *
+   * @platform ios
+   */
+  onWillAppear?: NativeEventHandler<EmptyEventPayload> | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Column` will
+   * disappear.
+   *
+   * @remarks
+   * This is called as soon as the transition begins.
+   *
+   * @platform ios
+   */
+  onWillDisappear?: NativeEventHandler<EmptyEventPayload> | undefined;
+}
+
+/**
+ * Props for {@link Split.Inspector}.
+ *
+ * @experimental
+ */
+export interface SplitInspectorProps extends ViewProps {
+  /**
+   * Content of the inspector column.
+   *
+   * @platform ios >= 26
+   */
+  children?: React.ReactNode | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Inspector` did appear.
+   *
+   * @remarks
+   * This is called as soon as the transition ends.
+   *
+   * @platform ios >= 26
+   */
+  onDidAppear?: NativeEventHandler<EmptyEventPayload> | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Inspector` did
+   * disappear.
+   *
+   * @remarks
+   * This is called as soon as the transition ends.
+   *
+   * @platform ios >= 26
+   */
+  onDidDisappear?: NativeEventHandler<EmptyEventPayload> | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Inspector` will
+   * appear.
+   *
+   * @remarks
+   * This is called as soon as the transition begins.
+   *
+   * @platform ios >= 26
+   */
+  onWillAppear?: NativeEventHandler<EmptyEventPayload> | undefined;
+  /**
+   * A callback that gets invoked when the current `Split.Inspector` will
+   * disappear.
+   *
+   * @remarks
+   * This is called as soon as the transition begins.
+   *
+   * @platform ios >= 26
+   */
+  onWillDisappear?: NativeEventHandler<EmptyEventPayload> | undefined;
+}
+
+/**
+ * Whether a screen is expected to be on the navigation stack of its column.
+ */
 export type SplitScreenActivityMode = 'detached' | 'attached';
 
+/**
+ * Payload of {@link SplitScreenProps.onDismiss}.
+ */
 export type SplitScreenDismissEvent = Readonly<{
   isNativeDismiss: boolean;
 }>;
 
+/**
+ * Props for {@link Split.Stack}.
+ *
+ * @experimental
+ */
 export interface SplitStackProps {
   children?: React.ReactNode | undefined;
 }
 
-export interface SplitScreenProps extends ViewProps {
-  children?: React.ReactNode | undefined;
+/**
+ * Props for {@link Split.Screen}, a screen in the navigation stack of a
+ * column. {@link Split.Column} and {@link Split.Inspector} accept them too.
+ *
+ * @experimental
+ */
+export interface SplitScreenProps extends SplitColumnProps {
   /**
-   * @summary Whether the screen is expected to be on the stack of its column. Defaults to `attached`.
+   * Whether the screen is expected to be on the stack of its column.
+   *
+   * @defaultValue `'attached'`
+   * @platform ios
    */
   activityMode?: SplitScreenActivityMode | undefined;
   /**
-   * @summary Identifier of the screen, used for debugging only.
+   * Identifier of the screen, used for debugging only.
+   *
+   * @platform ios
    */
   screenKey?: string | undefined;
   /**
-   * @summary A callback that gets invoked when the screen left the stack of its column, either after it was
-   * detached or after a native dismissal (e.g. the back button).
-   */
-  onDismiss?:
-    | ((e: NativeSyntheticEvent<SplitScreenDismissEvent>) => void)
-    | undefined;
-  /**
-   * @summary A callback that gets invoked when the current SplitScreen did appear.
+   * A callback that gets invoked when the screen left the stack of its column,
+   * either after it was detached or after a native dismissal (e.g. the back
+   * button).
    *
-   * This is called as soon as the transition ends.
+   * @platform ios
    */
-  onDidAppear?:
-    | ((e: NativeSyntheticEvent<GenericEmptyEvent>) => void)
-    | undefined;
-  /**
-   * @summary A callback that gets invoked when the current SplitScreen did disappear.
-   *
-   * This is called as soon as the transition ends.
-   */
-  onDidDisappear?:
-    | ((e: NativeSyntheticEvent<GenericEmptyEvent>) => void)
-    | undefined;
-  /**
-   * @summary A callback that gets invoked when the current SplitScreen will appear.
-   *
-   * This is called as soon as the transition begins.
-   */
-  onWillAppear?:
-    | ((e: NativeSyntheticEvent<GenericEmptyEvent>) => void)
-    | undefined;
-  /**
-   * @summary A callback that gets invoked when the current SplitScreen will disappear.
-   *
-   * This is called as soon as the transition begins.
-   */
-  onWillDisappear?:
-    | ((e: NativeSyntheticEvent<GenericEmptyEvent>) => void)
-    | undefined;
+  onDismiss?: NativeEventHandler<SplitScreenDismissEvent> | undefined;
 }

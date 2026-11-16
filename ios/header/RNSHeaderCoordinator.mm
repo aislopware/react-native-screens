@@ -1,7 +1,5 @@
 #import "RNSHeaderCoordinator.h"
-#import <React/RCTAssert.h>
-#import <React/RCTLog.h>
-#import "RNSConversions-Stack.h"
+#import "RNSAssert.h"
 #import "RNSDefines.h"
 #import "RNSHeaderContentFactory.h"
 #import "RNSHeaderItemDataProviding.h"
@@ -9,9 +7,16 @@
 #import "RNSHeaderMenuCoordinator.h"
 #import "RNSHeaderMenuFinder.h"
 #import "RNSHeaderMenuTrackerRegistry.h"
+#import "RNSLog.h"
 #import "RNSSearchBar.h"
 #import "RNSStackNavigationBarCoordinator.h"
 #import "RNSStackNavigationController.h"
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
+API_AVAILABLE(ios(27.0))
+static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromVisibilityPriority(
+    RNSHeaderItemVisibilityPriority visibilityPriority);
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
 
 @implementation RNSHeaderCoordinator {
   __weak UIViewController *_Nullable _screenController;
@@ -240,7 +245,7 @@
         if (index != NSNotFound) {
           _leadingBarButtonItems[index] = newBarButtonItem;
         } else {
-          RCTLogWarn(@"[RNScreens] Item %@ not found for rebuild.", oldBarButtonItem);
+          RNSLogW(@"[RNScreens] Item %@ not found for rebuild.", oldBarButtonItem);
         }
       }
 
@@ -255,7 +260,7 @@
         if (index != NSNotFound) {
           _trailingBarButtonItems[index] = newBarButtonItem;
         } else {
-          RCTLogWarn(@"[RNScreens] Item %@ not found for rebuild.", oldBarButtonItem);
+          RNSLogW(@"[RNScreens] Item %@ not found for rebuild.", oldBarButtonItem);
         }
       }
 
@@ -269,7 +274,7 @@
       if (index != NSNotFound) {
         _toolbarBarButtonItems[index] = newBarButtonItem;
       } else {
-        RCTLogWarn(@"[RNScreens] Item %@ not found for rebuild.", oldBarButtonItem);
+        RNSLogW(@"[RNScreens] Item %@ not found for rebuild.", oldBarButtonItem);
       }
       [self applyToolbarItemsForController:controller];
       [self updateToolbarVisibilityAnimated:YES];
@@ -414,6 +419,12 @@
   }
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
 
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_VISION && !TARGET_OS_TV
+  if (@available(iOS 27.0, *)) {
+    navItem.navigationBarMinimization = [UIBarMinimization new];
+  }
+#endif // Check for iOS >= 27 && !TARGET_OS_VISION && !TARGET_OS_TV
+
 #if !TARGET_OS_TV
   [self applySearchBar:nil forController:controller];
   [controller setToolbarItems:nil animated:NO];
@@ -515,7 +526,7 @@
 
 - (UIViewController *)requireScreenController
 {
-  RCTAssert(_screenController != nil, @"[RNScreens] Screen Controller cannot be nil");
+  RNSAssert(_screenController != nil, @"[RNScreens] Screen Controller cannot be nil");
   return _screenController;
 }
 
@@ -527,7 +538,7 @@
     return nil;
   }
 
-  RCTAssert(
+  RNSAssert(
       [navController isKindOfClass:RNSStackNavigationController.class],
       @"[RNScreens] NavigationController should be instance of RNSStackNavigationController");
   return (RNSStackNavigationController *)navController;
@@ -592,14 +603,15 @@
   }
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
 
-#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0)
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_VISION && !TARGET_OS_TV
   if (@available(iOS 27.0, *)) {
     UIBarMinimization *minimization = [UIBarMinimization new];
     minimization.minimizationBehavior = _configDataProvider.minimizationBehavior;
     minimization.restorationBehavior = _configDataProvider.restorationBehavior;
+    minimization.safeAreaAdjustment = _configDataProvider.safeAreaAdjustment;
     navItem.navigationBarMinimization = minimization;
   }
-#endif // Check for iOS >= 27
+#endif // Check for iOS >= 27 && !TARGET_OS_VISION && !TARGET_OS_TV
 
 #if !TARGET_OS_TV
   navItem.largeTitleDisplayMode = _configDataProvider.largeTitleEnabled ? UINavigationItemLargeTitleDisplayModeAlways
@@ -818,8 +830,7 @@
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
   if (@available(iOS 27.0, *)) {
     barButtonItem.visibilityPriority =
-        rnscreens::conversion::UIBarButtonItemVisibilityPriorityFromRNSHeaderItemVisibilityPriority(
-            item.visibilityPriority);
+        RNSBarButtonItemVisibilityPriorityFromVisibilityPriority(item.visibilityPriority);
   }
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
 
@@ -877,3 +888,22 @@
 }
 
 @end
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
+API_AVAILABLE(ios(27.0))
+static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromVisibilityPriority(
+    RNSHeaderItemVisibilityPriority visibilityPriority)
+{
+  switch (visibilityPriority) {
+    case RNSHeaderItemVisibilityPriorityLow:
+      return UIBarButtonItemVisibilityPriorityLow;
+    case RNSHeaderItemVisibilityPriorityStandard:
+      return UIBarButtonItemVisibilityPriorityStandard;
+    case RNSHeaderItemVisibilityPriorityHigh:
+      return UIBarButtonItemVisibilityPriorityHigh;
+    default:
+      RNSLogE(@"[RNScreens] Unsupported visibility priority");
+      return UIBarButtonItemVisibilityPriorityStandard;
+  }
+}
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION

@@ -59,7 +59,18 @@ export const ScreenStackHeaderConfig = React.forwardRef<
     headerRightBarButtonItems,
     headerCenterBarButtonItems,
     headerToolbarItems,
+    titleLetterSpacing,
+    largeTitleLetterSpacing,
+    backTitleLetterSpacing,
   } = props;
+
+  // Undefined keys are dropped on the way to native, so an omitted spacing
+  // stays distinct from 0.
+  const letterSpacing = {
+    title: titleLetterSpacing,
+    largeTitle: largeTitleLetterSpacing,
+    backTitle: backTitleLetterSpacing,
+  };
 
   const preparedHeaderLeftBarButtonItems =
     headerLeftBarButtonItems && isHeaderBarButtonsAvailableForCurrentPlatform
@@ -192,6 +203,7 @@ export const ScreenStackHeaderConfig = React.forwardRef<
     <ScreenStackHeaderConfigNativeComponent
       {...props}
       userInterfaceStyle={props.experimental_userInterfaceStyle}
+      letterSpacing={letterSpacing}
       headerLeftBarButtonItems={preparedHeaderLeftBarButtonItems}
       headerRightBarButtonItems={preparedHeaderRightBarButtonItems}
       headerCenterBarButtonItems={preparedHeaderCenterBarButtonItems}

@@ -1,14 +1,14 @@
 #import "RNSSplitColumnController.h"
 
-#import <React/RCTAssert.h>
+#import "RNSAssert.h"
 #import "RNSLog.h"
 #import "RNSSplitColumnControllerDelegate.h"
 #import "RNSSplitColumnFrameObserver.h"
-#import "RNSSplitColumnFrameObserverDelegate.h"
 #import "RNSStackNavigationController.h"
 #import "RNSStackOperationCoordinator.h"
+#import "RNSViewFrameChangeDelegate.h"
 
-@interface RNSSplitColumnController () <RNSSplitColumnFrameObserverDelegate>
+@interface RNSSplitColumnController () <RNSViewFrameChangeDelegate>
 @end
 
 @implementation RNSSplitColumnController {
@@ -67,7 +67,7 @@
       }
       break;
     default:
-      RCTAssert(NO, @"[RNScreens] Unexpected value of activityMode: %d", screen.activityMode);
+      RNSAssert(NO, @"[RNScreens] Unexpected value of activityMode: %d", screen.activityMode);
       return;
   }
 }
@@ -94,7 +94,8 @@
                                  }];
     return;
   }
-  [_operationCoordinator executePendingOperationsIfNeeded:_navigationController withRenderedScreens:_renderedScreens];
+  [_operationCoordinator enqueuePendingOperationsIfNeeded:_navigationController withRenderedScreens:_renderedScreens];
+  [_navigationController commitTransaction];
 }
 
 - (void)addPushOperationIfNeeded:(UIView<RNSStackScreenProviding> *)screen
@@ -112,14 +113,14 @@
       [_navigationController.viewControllers containsObject:screen.controller]) {
     [_operationCoordinator addPopOperation:screen];
   } else {
-    RNSLog(@"[RNScreens] ignoring pop operation of %@, already off the stack", screen.screenKey);
+    RNSLogD(@"[RNScreens] ignoring pop operation of %@, already off the stack", screen.screenKey);
   }
 }
 
-#pragma mark - RNSSplitColumnFrameObserverDelegate
+#pragma mark - RNSViewFrameChangeDelegate
 
-- (void)frameObserver:(RNSSplitColumnFrameObserver *)observer
-    didChangeFrameOriginOfNavigationController:(UINavigationController *)navigationController
+// Reported by the frame observer for origin changes of the navigation controller's view only.
+- (void)viewFrameDidChange:(nonnull UIView *)view
 {
   [self.delegate splitColumnControllerFrameOriginDidChange:self];
 }

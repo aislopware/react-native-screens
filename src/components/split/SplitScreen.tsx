@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import SplitScreenNativeComponent from '../../fabric/split/SplitScreenNativeComponent';
-import { SplitScreenProps, SplitStackProps } from './SplitScreen.types';
+import type { SplitScreenProps, SplitStackProps } from './SplitScreen.types';
 
 /**
  * Index of the column assigned by `Split.Host` to each `Split.Column`; read by the screens of the column.
@@ -9,8 +9,6 @@ import { SplitScreenProps, SplitStackProps } from './SplitScreen.types';
 export const SplitColumnIndexContext = React.createContext<number>(-1);
 
 /**
- * EXPERIMENTAL API, MIGHT CHANGE W/O ANY NOTICE
- *
  * A screen in the navigation stack of a column.
  */
 function Screen(props: SplitScreenProps) {
@@ -27,8 +25,6 @@ function Screen(props: SplitScreenProps) {
 }
 
 /**
- * EXPERIMENTAL API, MIGHT CHANGE W/O ANY NOTICE
- *
  * The navigation stack of a column. It has no native counterpart: its screens are mounted directly in the host and
  * routed to the column by index.
  */
@@ -37,8 +33,6 @@ function Stack(props: SplitStackProps) {
 }
 
 /**
- * EXPERIMENTAL API, MIGHT CHANGE W/O ANY NOTICE
- *
  * A column. With a `Split.Stack` child it is a JS-only grouping of the stack's screens and must not have other
  * children; otherwise the column itself is a single screen.
  */
@@ -58,9 +52,6 @@ function Column(props: SplitScreenProps) {
   return <Screen {...props} />;
 }
 
-/**
- * EXPERIMENTAL API, MIGHT CHANGE W/O ANY NOTICE
- */
 function Inspector(props: SplitScreenProps) {
   return (
     <SplitScreenNativeComponent
@@ -72,9 +63,6 @@ function Inspector(props: SplitScreenProps) {
   );
 }
 
-/**
- * EXPERIMENTAL API, MIGHT CHANGE W/O ANY NOTICE
- */
 // TODO: refactor to drop `Screen` suffix as the API name is really long at the moment
 const SplitScreen = {
   Column,

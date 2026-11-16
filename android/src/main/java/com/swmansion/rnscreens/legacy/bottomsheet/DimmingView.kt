@@ -7,7 +7,7 @@ import android.view.MotionEvent
 import android.view.ViewGroup
 import com.facebook.react.uimanager.ReactCompoundViewGroup
 import com.facebook.react.uimanager.ReactPointerEventsView
-import com.swmansion.rnscreens.ext.equalWithRespectToEps
+import com.swmansion.rnscreens.core.utils.equalWithRespectToEps
 
 /**
  * Serves as dimming view that can be used as background for some view that does not fully fill
@@ -32,6 +32,10 @@ internal class DimmingView(
     init {
         pointerEventsProxy.pointerEventsImpl = DimmingViewPointerEventsImpl(this)
         setFocusable(false)
+        // Keep the backdrop out of the accessibility tree, like `touch_outside` in Material's
+        // BottomSheetDialog. Clickable and unlabelled, it was the first node TalkBack focused
+        // when a sheet opened. Screen readers close the sheet with Back instead.
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     internal val blockGestures

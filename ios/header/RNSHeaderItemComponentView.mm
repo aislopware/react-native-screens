@@ -53,6 +53,7 @@ namespace react = facebook::react;
   _placement = RNSHeaderItemPlacementTrailing;
   _didSetHeaderItemPlacement = NO;
   _style = UIBarButtonItemStylePlain;
+  _itemTintColor = nil;
   _disabled = NO;
   _respondsToOnPress = NO;
   _hidesSharedBackground = NO;
@@ -131,23 +132,6 @@ namespace react = facebook::react;
   }
 }
 
-- (NSString *)variant
-{
-  switch (std::static_pointer_cast<const react::RNSHeaderItemIOSProps>(_props)->variant) {
-    case react::RNSHeaderItemIOSVariant::Plain:
-      return @"plain";
-    case react::RNSHeaderItemIOSVariant::Done:
-      return @"done";
-    case react::RNSHeaderItemIOSVariant::Prominent:
-      return @"prominent";
-  }
-}
-
-- (nullable UIColor *)tintColor
-{
-  return RCTUIColorFromSharedColor(std::static_pointer_cast<const react::RNSHeaderItemIOSProps>(_props)->tintColor);
-}
-
 - (nullable UIView *)customView
 {
   return self.subviews.count > 0 ? self : nil;
@@ -155,13 +139,13 @@ namespace react = facebook::react;
 
 #pragma mark - RNSViewFrameChangeDelegate
 
-- (void)viewFrameDidChange:(nonnull UINavigationBar *)navigationBar
+- (void)viewFrameDidChange:(nonnull UIView *)view
 {
   if (_state == nullptr || self.superview == nil) {
     return;
   }
 
-  CGRect frameInNavBar = [self convertRect:self.bounds toView:navigationBar];
+  CGRect frameInNavBar = [self convertRect:self.bounds toView:view];
   [_shadowStateProxy updateShadowStateWithFrame:frameInNavBar];
 }
 
@@ -285,6 +269,11 @@ RNS_IGNORE_SUPER_CALL_END
 
   if (oldItemProps.variant != newItemProps.variant) {
     _style = rnscreens::conversion::UIBarButtonItemStyleFromReactRNSHeaderItemIOSVariant(newItemProps.variant);
+    needsUpdate = YES;
+  }
+
+  if (oldItemProps.tintColor != newItemProps.tintColor) {
+    _itemTintColor = RCTUIColorFromSharedColor(newItemProps.tintColor);
     needsUpdate = YES;
   }
 

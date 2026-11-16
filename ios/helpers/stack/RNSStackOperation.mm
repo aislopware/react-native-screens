@@ -1,13 +1,13 @@
 #import "RNSStackOperation.h"
-#import <React/RCTAssert.h>
+#import "RNSAssert.h"
 
 @implementation RNSStackOperation
 
-- (instancetype)initWithScreen:(nonnull UIView<RNSStackScreenProviding> *)stackScreen
+- (instancetype)initWithScreenController:(nonnull UIViewController *)screenController
 {
-  RCTAssert(stackScreen != nil, @"[RNScreens] Expected nonnull stackScreen!");
+  RNSAssert(screenController != nil, @"[RNScreens] Expected nonnull screenController!");
   if (self = [super init]) {
-    _stackScreen = stackScreen;
+    _screenController = screenController;
   }
   return self;
 }

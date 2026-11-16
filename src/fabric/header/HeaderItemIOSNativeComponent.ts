@@ -18,7 +18,7 @@ export type Placement =
   | 'subtitle'
   | 'largeSubtitle';
 
-export type Variant = 'plain' | 'prominent';
+export type Variant = 'plain' | 'done' | 'prominent';
 
 export type StackHeaderMenuItemIOS = {
   id: string;
@@ -87,12 +87,12 @@ export interface NativeProps extends ViewProps {
     StackHeaderItemVisibilityPriorityIOS,
     'standard'
   >;
-  variant?: CT.WithDefault<'plain' | 'done' | 'prominent', 'plain'>;
-  tintColor?: ColorValue | undefined;
   title?: string | undefined;
   icon?: UnsafeMixed<PlatformIconIOS> | undefined;
   menu?: UnsafeMixed<StackHeaderMenuIOS> | undefined;
   menuRepresentation?: UnsafeMixed<StackHeaderMenuIOS> | undefined;
+  variant?: CT.WithDefault<Variant, 'plain'>;
+  tintColor?: ColorValue | undefined;
   disabled?: CT.WithDefault<boolean, false>;
   respondsToOnPress?: CT.WithDefault<boolean, false>;
   onHeaderItemPress?: CT.DirectEventHandler<HeaderItemPressEvent> | undefined;

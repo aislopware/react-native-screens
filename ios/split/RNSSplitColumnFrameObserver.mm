@@ -1,16 +1,16 @@
 #import "RNSSplitColumnFrameObserver.h"
-#import "RNSSplitColumnFrameObserverDelegate.h"
+#import "RNSViewFrameChangeDelegate.h"
 
 static void *RNSSplitColumnViewFrameContext = &RNSSplitColumnViewFrameContext;
 
 @implementation RNSSplitColumnFrameObserver {
   UINavigationController *__weak _navigationController;
-  id<RNSSplitColumnFrameObserverDelegate> __weak _delegate;
+  id<RNSViewFrameChangeDelegate> __weak _delegate;
   UIView *__weak _observedView;
 }
 
 - (instancetype)initWithNavigationController:(UINavigationController *)navigationController
-                                    delegate:(id<RNSSplitColumnFrameObserverDelegate>)delegate
+                                    delegate:(id<RNSViewFrameChangeDelegate>)delegate
 {
   if (self = [super init]) {
     _navigationController = navigationController;
@@ -66,7 +66,7 @@ static void *RNSSplitColumnViewFrameContext = &RNSSplitColumnViewFrameContext;
   if (!CGPointEqualToPoint(oldFrame.origin, newFrame.origin)) {
     UINavigationController *navigationController = _navigationController;
     if (navigationController != nil) {
-      [_delegate frameObserver:self didChangeFrameOriginOfNavigationController:navigationController];
+      [_delegate viewFrameDidChange:navigationController.view];
     }
   }
 }

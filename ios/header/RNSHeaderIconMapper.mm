@@ -1,5 +1,14 @@
 #import "RNSHeaderIconMapper.h"
 
+static RNSHeaderIconImageSource RNSHeaderIconImageSourceFromDictionary(NSDictionary *source)
+{
+  return RNSHeaderIconImageSource{
+      .source = source,
+      .size = CGSizeMake([source[@"width"] doubleValue], [source[@"height"] doubleValue]),
+      .scale = [source[@"scale"] doubleValue],
+  };
+}
+
 @implementation RNSHeaderIconMapper
 
 + (nullable RNSHeaderIconData *)iconFromDictionary:(nullable id)dictionary
@@ -15,11 +24,15 @@
   }
 
   if ([type isEqualToString:@"sfSymbol"]) {
-    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeSfSymbol resourceName:dict[@"name"] jsonSource:nil];
+    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeSfSymbol
+                                      resourceName:dict[@"name"]
+                                       imageSource:RNSHeaderIconImageSource{}];
   }
 
   if ([type isEqualToString:@"xcasset"]) {
-    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeXcasset resourceName:dict[@"name"] jsonSource:nil];
+    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeXcasset
+                                      resourceName:dict[@"name"]
+                                       imageSource:RNSHeaderIconImageSource{}];
   }
 
   if ([type isEqualToString:@"imageSource"]) {
@@ -27,7 +40,9 @@
     if (![source isKindOfClass:[NSDictionary class]]) {
       return nil;
     }
-    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeImageSource resourceName:nil jsonSource:source];
+    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeImageSource
+                                      resourceName:nil
+                                       imageSource:RNSHeaderIconImageSourceFromDictionary(source)];
   }
 
   if ([type isEqualToString:@"templateSource"]) {
@@ -35,7 +50,9 @@
     if (![source isKindOfClass:[NSDictionary class]]) {
       return nil;
     }
-    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeTemplateSource resourceName:nil jsonSource:source];
+    return [[RNSHeaderIconData alloc] initWithType:RNSHeaderIconTypeTemplateSource
+                                      resourceName:nil
+                                       imageSource:RNSHeaderIconImageSourceFromDictionary(source)];
   }
 
   return nil;

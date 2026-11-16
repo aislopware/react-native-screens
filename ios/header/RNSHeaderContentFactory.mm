@@ -1,9 +1,9 @@
 #import "RNSHeaderContentFactory.h"
-#import <React/RCTLog.h>
 #import "RNSDefines.h"
 #import "RNSHeaderIconResolver.h"
 #import "RNSHeaderItemWrapperView.h"
 #import "RNSHeaderMenuCoordinator.h"
+#import "RNSLog.h"
 
 @implementation RNSHeaderContentFactory
 
@@ -31,8 +31,9 @@
                                           withImageLoader:imageLoader];
   }
 
+  // Custom-view items take the same state as the label items built above.
   barButtonItem.enabled = !item.disabled;
-  barButtonItem.tintColor = item.tintColor;
+  barButtonItem.tintColor = item.itemTintColor;
   barButtonItem.style = item.style;
 
   return barButtonItem;
@@ -60,13 +61,17 @@
                                                     action:nil];
   }
 
+  barButtonItem.style = item.style;
+  barButtonItem.tintColor = item.itemTintColor;
+  barButtonItem.enabled = !item.disabled;
+
   if (item.icon != nil) {
     __weak UIBarButtonItem *weakBarButtonItem = barButtonItem;
     UIImage *syncImage = [RNSHeaderIconResolver resolveIcon:item.icon
                                             withImageLoader:imageLoader
                                        asyncCompletionBlock:^(UIImage *_Nullable image) {
                                          if (weakBarButtonItem == nil) {
-                                           RCTLogWarn(@"[RNScreens] Attempt to set image on nil UIBarButtonItem");
+                                           RNSLogW(@"[RNScreens] Attempt to set image on nil UIBarButtonItem");
                                            return;
                                          }
                                          weakBarButtonItem.image = image;

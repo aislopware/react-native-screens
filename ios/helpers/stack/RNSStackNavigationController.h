@@ -1,12 +1,12 @@
 #pragma once
 
 #import "RNSContainer.h"
+#import "RNSContainerTransactionSupporting.h"
 #include "RNSStackNavigationBarCoordinator.h"
-#include "RNSStackScreenProviding.h"
 
 @protocol RNSViewFrameChangeDelegate;
 
-@interface RNSStackNavigationController : UINavigationController <RNSContainer>
+@interface RNSStackNavigationController : UINavigationController <RNSContainer, RNSContainerTransactionSupporting>
 
 @property (nonatomic, weak, nullable) id<RNSViewFrameChangeDelegate> navigationBarFrameChangeDelegate;
 
@@ -21,10 +21,9 @@
 - (nonnull UIBarButtonItem *)toolbarIconButtonForIdentifier:(nonnull NSString *)identifier;
 #endif
 
-- (void)enqueuePushOperation:(nonnull UIView<RNSStackScreenProviding> *)stackScreen;
+/** Takes the controller of a stack screen, or of a split screen routed to a column's stack. */
+- (void)enqueuePushOperation:(nonnull UIViewController *)screenController;
 
-- (void)enqueuePopOperation:(nonnull UIView<RNSStackScreenProviding> *)stackScreen;
-
-- (void)performContainerUpdateIfNeeded;
+- (void)enqueuePopOperation:(nonnull UIViewController *)screenController;
 
 @end

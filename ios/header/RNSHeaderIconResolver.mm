@@ -1,5 +1,5 @@
 #import "RNSHeaderIconResolver.h"
-#import <React/RCTLog.h>
+#import "RNSLog.h"
 
 @implementation RNSHeaderIconResolver
 
@@ -20,7 +20,7 @@
     case RNSHeaderIconTypeSfSymbol: {
       UIImage *image = [UIImage systemImageNamed:iconData.resourceName];
       if (image == nil && iconData.resourceName != nil) {
-        RCTLogWarn(@"[RNScreens] Failed to load SF Symbol \"%@\" for header icon", iconData.resourceName);
+        RNSLogW(@"[RNScreens] Failed to load SF Symbol \"%@\" for header icon", iconData.resourceName);
       }
       iconData.resolvedImage = image;
       return image;
@@ -28,26 +28,26 @@
     case RNSHeaderIconTypeXcasset: {
       UIImage *image = [UIImage imageNamed:iconData.resourceName];
       if (image == nil && iconData.resourceName != nil) {
-        RCTLogWarn(@"[RNScreens] Failed to load xcasset \"%@\" for header icon", iconData.resourceName);
+        RNSLogW(@"[RNScreens] Failed to load xcasset \"%@\" for header icon", iconData.resourceName);
       }
       iconData.resolvedImage = image;
       return image;
     }
     case RNSHeaderIconTypeImageSource:
     case RNSHeaderIconTypeTemplateSource: {
-      if (imageLoader == nil || iconData.jsonSource == nil) {
+      if (imageLoader == nil || iconData.imageSource.source == nil) {
         return nil;
       }
       // Weak ref to iconData to avoid retaining it if the item is removed before load completes
       __weak RNSHeaderIconData *weakIconData = iconData;
-      [imageLoader loadImageFromJsonSource:iconData.jsonSource
-                                asTemplate:iconData.iconType == RNSHeaderIconTypeTemplateSource
-                    withCompletionCallback:^(UIImage *_Nullable image) {
-                      weakIconData.resolvedImage = image;
-                      if (completionBlock) {
-                        completionBlock(image);
-                      }
-                    }];
+      [imageLoader loadImageFromSource:iconData.imageSource.source
+                            asTemplate:iconData.iconType == RNSHeaderIconTypeTemplateSource
+                withCompletionCallback:^(UIImage *_Nullable image) {
+                  weakIconData.resolvedImage = image;
+                  if (completionBlock) {
+                    completionBlock(image);
+                  }
+                }];
       return iconData.resolvedImage;
     }
   }
@@ -55,13 +55,13 @@
 
 + (nullable UIImage *)placeholderImageForIcon:(RNSHeaderIconData *)iconData
 {
-  if (iconData.jsonSource == nil) {
+  if (iconData.imageSource.source == nil) {
     return nil;
   }
 
-  CGFloat width = [iconData.jsonSource[@"width"] doubleValue];
-  CGFloat height = [iconData.jsonSource[@"height"] doubleValue];
-  CGFloat scale = [iconData.jsonSource[@"scale"] doubleValue] ?: 1.0;
+  CGFloat width = iconData.imageSource.size.width;
+  CGFloat height = iconData.imageSource.size.height;
+  CGFloat scale = iconData.imageSource.scale ?: 1.0;
   CGSize size = (width > 0 && height > 0) ? CGSizeMake(width, height) : CGSizeMake(1, 1);
 
   UIGraphicsImageRendererFormat *format = [UIGraphicsImageRendererFormat defaultFormat];

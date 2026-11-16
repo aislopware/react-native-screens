@@ -1,7 +1,7 @@
 #import "RNSStackNavigationController.h"
-#import <React/RCTAssert.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import "RCTSurfaceTouchHandler+RNSUtility.h"
+#import "RNSAssert.h"
 #import "RNSContainer.h"
 #import "RNSContainerItem.h"
 #import "RNSDefines.h"
@@ -12,6 +12,7 @@
 #import "RNSStackOperation.h"
 #import "RNSStackScreenComponentEventEmitter.h"
 #import "RNSStackScreenComponentView.h"
+#import "RNSStackScreenProviding.h"
 #import "RNSViewFrameChangeDelegate.h"
 
 @interface RNSStackNavigationController ()
@@ -287,19 +288,26 @@
   return _pendingPushOperations.count > 0 || _pendingPopOperations.count > 0;
 }
 
-- (void)enqueuePushOperation:(nonnull UIView<RNSStackScreenProviding> *)stackScreen
+- (void)enqueuePushOperation:(nonnull UIViewController *)screenController
 {
-  RNSPushOperation *operation = [[RNSPushOperation alloc] initWithScreen:stackScreen];
+  RNSPushOperation *operation = [[RNSPushOperation alloc] initWithScreenController:screenController];
   [_pendingPushOperations addObject:operation];
 }
 
-- (void)enqueuePopOperation:(nonnull UIView<RNSStackScreenProviding> *)stackScreen
+- (void)enqueuePopOperation:(nonnull UIViewController *)screenController
 {
-  RNSPopOperation *operation = [[RNSPopOperation alloc] initWithScreen:stackScreen];
+  RNSPopOperation *operation = [[RNSPopOperation alloc] initWithScreenController:screenController];
   [_pendingPopOperations addObject:operation];
 }
 
-- (void)performContainerUpdateIfNeeded
+#pragma mark - RNSContainerTransactionSupporting
+
+- (void)beginTransaction
+{
+  // noop
+}
+
+- (void)commitTransaction
 {
   // NOTE: We consider UINavigationController.viewControllers to be part of
   // the internal state of our stack implementation and expect it to be
@@ -317,26 +325,26 @@
     // the final pop animates can leave the old screen visible with the new stack.
     NSMutableArray<UIViewController *> *controllers = [self.viewControllers mutableCopy];
     for (RNSPopOperation *op in _pendingPopOperations) {
-      RCTAssert(
+      RNSAssert(
           self.allowsEmptyStack ? controllers.count > 0 : controllers.count > 1,
           @"[RNScreens] Attempt to pop last screen from the stack");
-      RCTAssert(controllers.lastObject == op.stackScreen.controller, @"[RNScreens] Attempt to pop non-top screen");
+      RNSAssert(controllers.lastObject == op.screenController, @"[RNScreens] Attempt to pop non-top screen");
       [controllers removeLastObject];
     }
     if (controllers.count > 0 && controllers.lastObject == _emptyStackController) {
       [controllers removeLastObject];
     }
     for (RNSPushOperation *op in _pendingPushOperations) {
-      [controllers addObject:op.stackScreen.controller];
+      [controllers addObject:op.screenController];
     }
     [self prepareToolbarForController:controllers.lastObject];
     [self setViewControllers:controllers animated:YES];
   } else {
     for ([[maybe_unused]] RNSPopOperation *op in _pendingPopOperations) {
-      RCTAssert(
+      RNSAssert(
           self.allowsEmptyStack ? !self.isStackEmpty : [self.viewControllers count] > 1,
           @"[RNScreens] Attempt to pop last screen from the stack");
-      RCTAssert(self.topViewController == op.stackScreen.controller, @"[RNScreens] Attempt to pop non-top screen");
+      RNSAssert(self.topViewController == op.screenController, @"[RNScreens] Attempt to pop non-top screen");
       if (self.allowsEmptyStack && self.viewControllers.count == 1) {
         // UIKit cannot show an empty nested navigation controller when the split is collapsed.
         [self setViewControllers:@[ _emptyStackController ] animated:NO];
@@ -349,14 +357,14 @@
     for (RNSPushOperation *op in _pendingPushOperations) {
       if (self.allowsEmptyStack && self.isStackEmpty) {
         // The first screen is the root, so the placeholder must not appear in its back stack.
-        [self setViewControllers:@[ op.stackScreen.controller ] animated:NO];
+        [self setViewControllers:@[ op.screenController ] animated:NO];
       } else {
-        [self pushViewController:op.stackScreen.controller animated:op == _pendingPushOperations.lastObject];
+        [self pushViewController:op.screenController animated:op == _pendingPushOperations.lastObject];
       }
     }
   }
 
-  RCTAssert(
+  RNSAssert(
       self.allowsEmptyStack || [self.viewControllers count] > 0,
       @"[RNScreens] Stack should never be empty after updates");
 
@@ -372,12 +380,12 @@
 - (void)dumpStackModel
 {
 #ifdef RNS_DEBUG_LOGGING
-  RNSLog(@"[RNScreens] StackContainer [%ld] MODEL BEGIN", self.view.tag);
+  RNSLogD(@"[RNScreens] StackContainer [%ld] MODEL BEGIN", self.view.tag);
   for (UIViewController *viewController in self.viewControllers) {
     if (viewController == _emptyStackController) {
       continue;
     }
-    RNSLog(@"[RNScreens] %@", [(id<RNSStackScreenProviding>)viewController.view screenKey]);
+    RNSLogD(@"[RNScreens] %@", [(id<RNSStackScreenProviding>)viewController.view screenKey]);
   }
 #endif // RNS_DEBUG_LOGGING
 }
