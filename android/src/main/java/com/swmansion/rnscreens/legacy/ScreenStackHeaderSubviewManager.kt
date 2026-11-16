@@ -52,6 +52,7 @@ class ScreenStackHeaderSubviewManager :
         view: ScreenStackHeaderSubview,
         identifier: String?,
     ) = Unit
+
     override fun setVisibilityPriority(
         view: ScreenStackHeaderSubview,
         visibilityPriority: String?,
