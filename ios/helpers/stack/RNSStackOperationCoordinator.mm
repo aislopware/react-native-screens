@@ -59,7 +59,8 @@
   auto pushScreens = [self orderedScreens:_pendingPushScreens withIndicesFrom:renderedScreens];
 
   for (UIView<RNSStackScreenProviding> *screen in pushScreens) {
-    [controller enqueuePushOperation:screen.controller];
+    BOOL animated = ![screen respondsToSelector:@selector(animatesPush)] || [screen animatesPush];
+    [controller enqueuePushOperation:screen.controller animated:animated];
   }
 
   [_pendingPopScreens removeAllObjects];

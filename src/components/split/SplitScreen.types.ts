@@ -158,6 +158,13 @@ export interface SplitScreenProps extends SplitColumnProps {
    */
   screenKey?: string | undefined;
   /**
+   * Whether UIKit animates pushing the screen onto its column's stack.
+   * Defaults to `true`.
+   *
+   * @platform ios
+   */
+  animatesPush?: boolean | undefined;
+  /**
    * A callback that gets invoked when the screen left the stack of its column,
    * either after it was detached or after a native dismissal (e.g. the back
    * button).

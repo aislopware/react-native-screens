@@ -15,6 +15,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface RNSPushOperation : RNSStackOperation
 
+/** Whether UIKit animates the push when it is the last one of its batch. */
+@property (nonatomic, readonly) BOOL animated;
+
+- (instancetype)initWithScreenController:(nonnull UIViewController *)screenController animated:(BOOL)animated;
+
 @end
 
 @interface RNSPopOperation : RNSStackOperation

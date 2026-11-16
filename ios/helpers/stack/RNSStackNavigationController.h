@@ -22,7 +22,7 @@
 #endif
 
 /** Takes the controller of a stack screen, or of a split screen routed to a column's stack. */
-- (void)enqueuePushOperation:(nonnull UIViewController *)screenController;
+- (void)enqueuePushOperation:(nonnull UIViewController *)screenController animated:(BOOL)animated;
 
 - (void)enqueuePopOperation:(nonnull UIViewController *)screenController;
 

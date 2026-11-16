@@ -15,6 +15,15 @@
 @end
 
 @implementation RNSPushOperation
+
+- (instancetype)initWithScreenController:(nonnull UIViewController *)screenController animated:(BOOL)animated
+{
+  if (self = [super initWithScreenController:screenController]) {
+    _animated = animated;
+  }
+  return self;
+}
+
 @end
 
 @implementation RNSPopOperation

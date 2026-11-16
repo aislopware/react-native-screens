@@ -288,9 +288,9 @@
   return _pendingPushOperations.count > 0 || _pendingPopOperations.count > 0;
 }
 
-- (void)enqueuePushOperation:(nonnull UIViewController *)screenController
+- (void)enqueuePushOperation:(nonnull UIViewController *)screenController animated:(BOOL)animated
 {
-  RNSPushOperation *operation = [[RNSPushOperation alloc] initWithScreenController:screenController];
+  RNSPushOperation *operation = [[RNSPushOperation alloc] initWithScreenController:screenController animated:animated];
   [_pendingPushOperations addObject:operation];
 }
 
@@ -338,7 +338,7 @@
       [controllers addObject:op.screenController];
     }
     [self prepareToolbarForController:controllers.lastObject];
-    [self setViewControllers:controllers animated:YES];
+    [self setViewControllers:controllers animated:_pendingPushOperations.lastObject.animated];
   } else {
     for ([[maybe_unused]] RNSPopOperation *op in _pendingPopOperations) {
       RNSAssert(
@@ -359,7 +359,8 @@
         // The first screen is the root, so the placeholder must not appear in its back stack.
         [self setViewControllers:@[ op.screenController ] animated:NO];
       } else {
-        [self pushViewController:op.screenController animated:op == _pendingPushOperations.lastObject];
+        [self pushViewController:op.screenController
+                        animated:op == _pendingPushOperations.lastObject && op.animated];
       }
     }
   }

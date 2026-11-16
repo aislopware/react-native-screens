@@ -105,6 +105,7 @@ namespace react = facebook::react;
   _column = -1;
   _activityMode = RNSStackScreenActivityModeAttached;
   _screenKey = nil;
+  _animatesPush = YES;
 }
 
 - (void)registerForFrameCorrection:(UIView *)view
@@ -267,6 +268,10 @@ namespace react = facebook::react;
 
   if (oldComponentProps.screenKey != newComponentProps.screenKey) {
     _screenKey = RCTNSStringFromStringNilIfEmpty(newComponentProps.screenKey);
+  }
+
+  if (oldComponentProps.animatesPush != newComponentProps.animatesPush) {
+    _animatesPush = newComponentProps.animatesPush;
   }
 
   if (oldComponentProps.activityMode != newComponentProps.activityMode) {
