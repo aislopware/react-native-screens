@@ -173,7 +173,7 @@
 
 - (BOOL)isContentReady
 {
-  return self.tabScreenComponentView.contentReady;
+  return self.configProvider == nil || self.configProvider.contentReady;
 }
 
 @end
