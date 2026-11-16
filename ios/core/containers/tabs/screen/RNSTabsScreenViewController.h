@@ -75,6 +75,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)isPreventNativeSelectionEnabled;
 
+- (BOOL)isContentReady;
+
 @end
 
 NS_ASSUME_NONNULL_END

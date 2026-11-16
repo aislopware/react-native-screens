@@ -171,4 +171,9 @@
   return self.configProvider.preventNativeSelection;
 }
 
+- (BOOL)isContentReady
+{
+  return self.tabScreenComponentView.contentReady;
+}
+
 @end
