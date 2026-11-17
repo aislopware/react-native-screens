@@ -1620,6 +1620,7 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
   }
   switch (self.screenView.stackPresentation) {
     case RNSScreenStackPresentationModal:
+    case RNSScreenStackPresentationFullScreenModal:
     case RNSScreenStackPresentationPageSheet:
     case RNSScreenStackPresentationFormSheet:
       return UIVerticalBarBehaviorDisabled;
