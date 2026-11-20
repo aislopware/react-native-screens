@@ -247,6 +247,14 @@ static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromV
 
   RNSStackScreenController *controller = [self requireScreenController];
 
+  BOOL isBarItem = targetItem.placement == RNSHeaderItemPlacementLeading ||
+      targetItem.placement == RNSHeaderItemPlacementTrailing || targetItem.placement == RNSHeaderItemPlacementToolbar;
+  if (isBarItem && oldBarButtonItem == nil) {
+    // No full rebuild has shown this item yet, and the one that is pending builds it. Building it here would
+    // register a button no bar shows, and every later update of the item would miss it.
+    return;
+  }
+
   switch (targetItem.placement) {
     case RNSHeaderItemPlacementLeading: {
       NSSet<UIBarButtonItem *> *shownItems = [NSSet setWithArray:_leadingBarButtonItems];
