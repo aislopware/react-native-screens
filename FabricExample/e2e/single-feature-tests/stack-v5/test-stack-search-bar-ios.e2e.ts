@@ -1,6 +1,9 @@
 import { by, device, element, expect, waitFor } from 'detox';
+import type { IosElementAttributes } from 'detox/detox';
 import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
+import { openHeaderItemMenu } from '@e2e/framework/context-menu-ios';
 import { describeIfIOS } from '@e2e/framework/platform';
+import { waitUntil } from '@e2e/framework/wait';
 
 const searchField = () => element(by.type('UISearchTextField'));
 
@@ -10,6 +13,20 @@ async function tapControl(id: string) {
     .toBeVisible()
     .whileElement(by.id('search-controls'))
     .scroll(150, 'down', 0.5, 0.35);
+  // While search is focused the keyboard covers the lower controls, and
+  // Detox's visibility check does not see it: scroll on until a tap can land.
+  await waitUntil(
+    async () => {
+      const control = (await element(
+        by.id(id),
+      ).getAttributes()) as IosElementAttributes;
+      if (!control.hittable) {
+        await element(by.id('search-controls')).scroll(100, 'down', 0.5, 0.35);
+      }
+      return control.hittable;
+    },
+    { message: `control "${id}" to be clear of the keyboard` },
+  );
   await element(by.id(id)).tap();
 }
 
@@ -28,7 +45,7 @@ describeIfIOS('Stack search bar (iOS)', () => {
 
   it('keeps search unfocused when a filter menu action updates the header', async () => {
     await expect(searchField()).toBeVisible();
-    await element(by.text('Filters')).tap();
+    await openHeaderItemMenu('Filters');
     await element(by.text('Apply filter')).tap();
     await expect(element(by.id('filter-count'))).toHaveText('Filters: 1');
     await expectUnfocused();
@@ -89,7 +106,7 @@ describeIfIOS('Stack search bar (iOS)', () => {
     await expectUnfocused();
     await element(by.id('search-controls')).scroll(300, 'down', 0.5, 0.55);
     await expect(searchField()).not.toBeVisible();
-    await element(by.text('Filters')).tap();
+    await openHeaderItemMenu('Filters');
     await element(by.text('Toggle hide when scrolling')).tap();
     await expect(element(by.text('Hide when scrolling: false'))).toExist();
     await expect(searchField()).toBeVisible();

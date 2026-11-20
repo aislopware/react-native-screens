@@ -76,6 +76,9 @@ export const CLASS_NAME_UI_CONTEXT_MENU_SUBMENU_TITLE_VIEW =
 // The backdrop UIKit inserts behind a presented sheet.
 export const CLASS_NAME_UI_DIMMING_VIEW = 'UIDimmingView';
 export const CLASS_NAME_UI_DROP_SHADOW_VIEW = 'UIDropShadowView';
+// Inside a presented sheet's `UIDropShadowView` only; the window's own has none.
+export const CLASS_NAME_UI_DROP_SHADOW_CLIPPING_VIEW =
+  '_UIDropShadowClippingView';
 // The sheet grabber. UIKit keeps it in the hierarchy at alpha 0 when hidden.
 export const CLASS_NAME_UI_GRABBER = '_UIGrabber';
 

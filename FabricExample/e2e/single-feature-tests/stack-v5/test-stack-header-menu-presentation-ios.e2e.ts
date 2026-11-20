@@ -4,9 +4,9 @@ import {
   CONTEXT_MENU_ANIMATION_TIMEOUT_MS,
   contextMenu,
   dismissContextMenu,
-  openContextMenu,
+  openHeaderItemMenu,
 } from '@e2e/framework/context-menu-ios';
-import { headerItem } from '@e2e/framework/header-items-ios';
+import { tapHeaderItem } from '@e2e/framework/header-items-ios';
 import { countMatches, getFrame } from '@e2e/framework/matchers';
 import { describeIfIOS } from '@e2e/framework/platform';
 import {
@@ -14,7 +14,7 @@ import {
   CLASS_NAME_UI_CONTEXT_MENU_LIST_VIEW,
 } from '@e2e/framework/native-classes-ios';
 
-const openMenu = () => openContextMenu(headerItem('Actions'));
+const openMenu = () => openHeaderItemMenu('Actions');
 const notificationsCheckmark = () =>
   element(
     by
@@ -123,7 +123,7 @@ describeIfIOS('Stack Header Menu Presentation (iOS)', () => {
     await expect(element(by.text('Managed by policy'))).toBeVisible();
     await dismissContextMenu();
     await element(by.id('toggle-menu')).tap();
-    await headerItem('Actions').tap();
+    await tapHeaderItem('Actions');
     // A negative waitFor returns immediately while presentation is still pending.
     await new Promise(resolve =>
       setTimeout(resolve, CONTEXT_MENU_ANIMATION_TIMEOUT_MS),

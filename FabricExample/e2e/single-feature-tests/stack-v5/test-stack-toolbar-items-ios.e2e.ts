@@ -9,7 +9,7 @@ import {
   dismissContextMenu,
   menuRow,
 } from '@e2e/framework/context-menu-ios';
-import { headerItem } from '@e2e/framework/header-items-ios';
+import { headerItem, tapHeaderView } from '@e2e/framework/header-items-ios';
 import { describeIfIOS, isIOSVersionAtLeast } from '@e2e/framework/platform';
 
 const toolbarItem = (title: string) => headerItem(title);
@@ -188,12 +188,12 @@ describeIfIOS('Stack Toolbar Items (iOS)', () => {
   it('restores toolbar ownership after native back navigation', async () => {
     await button('Push other toolbar').tap();
     await expectScreen('Second');
-    await element(
+    await tapHeaderView(
       by
         .id('chevron.backward')
         .and(by.type('UIImageView'))
         .withAncestor(by.type('RNSStackNavigationBar')),
-    ).tap();
+    );
     await expectScreen('First');
     await expectToolbarItem('First toolbar');
     await expect(toolbarItem('Second toolbar')).not.toExist();

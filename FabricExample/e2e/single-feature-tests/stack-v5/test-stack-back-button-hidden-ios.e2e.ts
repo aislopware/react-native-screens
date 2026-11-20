@@ -1,5 +1,6 @@
 import { device, expect, element, by } from 'detox';
 import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
+import { expectHeaderViewShown } from '@e2e/framework/header-items-ios';
 import { describeIfIOS } from '@e2e/framework/platform';
 import { CLASS_NAME_UI_BUTTON_BAR_BUTTON } from '@e2e/framework/native-classes-ios';
 
@@ -11,14 +12,14 @@ function navigationBar(title: string) {
 // its navigation bar is UIKit's back button. Scope to the title so that the
 // example app's enclosing navigator cannot satisfy the assertion.
 function backButton(title: string) {
-  return element(
-    by.type(CLASS_NAME_UI_BUTTON_BAR_BUTTON).withAncestor(navigationBar(title)),
-  );
+  return by
+    .type(CLASS_NAME_UI_BUTTON_BAR_BUTTON)
+    .withAncestor(navigationBar(title));
 }
 
 async function expectHiddenBackButton(title: string) {
   await expect(element(navigationBar(title))).toBeVisible();
-  await expect(backButton(title)).not.toExist();
+  await expect(element(backButton(title))).not.toExist();
 }
 
 describeIfIOS('Stack v5: backButtonHidden', () => {
@@ -39,17 +40,17 @@ describeIfIOS('Stack v5: backButtonHidden', () => {
 
   it('updates visibility and restores the default when the prop is removed', async () => {
     await element(by.text('Set false')).tap();
-    await expect(backButton('Visibility')).toBeVisible();
+    await expectHeaderViewShown(backButton('Visibility'));
     await element(by.text('Set true')).tap();
     await expectHiddenBackButton('Visibility');
     await element(by.text('Remove prop')).tap();
-    await expect(backButton('Visibility')).toBeVisible();
+    await expectHeaderViewShown(backButton('Visibility'));
   });
 
   it('applies visibility to the current screen without hiding the next screen back button', async () => {
     await element(by.text('Set true')).tap();
     await element(by.text('Push Default')).tap();
-    await expect(backButton('Default')).toBeVisible();
+    await expectHeaderViewShown(backButton('Default'));
     await element(by.text('Pop Default')).tap();
     await expectHiddenBackButton('Visibility');
   });
@@ -58,12 +59,12 @@ describeIfIOS('Stack v5: backButtonHidden', () => {
     await element(by.text('Remove header config')).tap();
     await expect(element(navigationBar('Visibility'))).not.toExist();
     await element(by.text('Push Default')).tap();
-    await expect(backButton('Default')).toBeVisible();
+    await expectHeaderViewShown(backButton('Default'));
     await element(by.text('Pop Default')).tap();
     await expect(element(navigationBar('Visibility'))).not.toExist();
     await element(by.text('Remove prop')).tap();
     await element(by.text('Mount header config')).tap();
-    await expect(backButton('Visibility')).toBeVisible();
+    await expectHeaderViewShown(backButton('Visibility'));
   });
 
   it('starts a new pushed instance with its initial hidden configuration', async () => {

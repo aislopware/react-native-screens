@@ -1,6 +1,17 @@
 import { by, device, element, expect, waitFor } from 'detox';
 import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
-import { describeIfIOS, describeIfIOSAtLeast } from '@e2e/framework/platform';
+import { CLASS_NAME_UI_DROP_SHADOW_CLIPPING_VIEW } from '@e2e/framework/native-classes-ios';
+import {
+  describeIfIOS,
+  describeIfIOSAtLeast,
+  isIPadTarget,
+} from '@e2e/framework/platform';
+
+// A collapsed split (iPhone) presents the inspector as a sheet that covers the
+// scenario's controls. This is the sheet's navigation bar, to drag it away by.
+const inspectorSheetBar = by
+  .type('RNSStackNavigationBar')
+  .withAncestor(by.type(CLASS_NAME_UI_DROP_SHADOW_CLIPPING_VIEW));
 
 describeIfIOS('Split: empty stack columns', () => {
   beforeAll(async () => {
@@ -93,7 +104,16 @@ describeIfIOSAtLeast('26.0')('Split: empty stack inspector', () => {
   it('shows the inspector with an empty stack and populates it', async () => {
     await element(by.text('Toggle inspector')).tap();
     await expect(element(by.id('empty-column-inspector-files'))).not.toExist();
-    await element(by.text('Populate inspector')).tap();
+    if (isIPadTarget) {
+      await element(by.text('Populate inspector')).tap();
+    } else {
+      await expect(element(inspectorSheetBar)).toExist();
+      await element(inspectorSheetBar).swipe('down', 'fast');
+      await waitFor(element(inspectorSheetBar)).not.toExist().withTimeout(3000);
+      await element(by.text('Populate inspector')).tap();
+      // Shows it again only if the swipe reported `onInspectorHide`.
+      await element(by.text('Toggle inspector')).tap();
+    }
     await expect(element(by.id('empty-column-inspector-files'))).toBeVisible();
   });
 

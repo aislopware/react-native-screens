@@ -6,12 +6,12 @@ import {
   contextMenu,
   dismissContextMenu,
   menuRowIcon,
-  openContextMenu,
+  openHeaderItemMenu,
 } from '@e2e/framework/context-menu-ios';
-import { headerItem } from '@e2e/framework/header-items-ios';
+import { tapHeaderItem } from '@e2e/framework/header-items-ios';
 import { describeIfIOS } from '@e2e/framework/platform';
 
-const openMenu = () => openContextMenu(headerItem('Format'));
+const openMenu = () => openHeaderItemMenu('Format');
 const mixedIndicatorFor = (title: string) => menuRowIcon('minus', title);
 
 describeIfIOS('Stack Header Menu Action State (iOS)', () => {
@@ -126,7 +126,7 @@ describeIfIOS('Stack Header Menu Action State (iOS)', () => {
     await expect(mixedIndicatorFor('Italic')).not.toExist();
     await dismissContextMenu();
     await element(by.id('toggle-menu')).tap();
-    await headerItem('Format').tap();
+    await tapHeaderItem('Format');
     // A negative waitFor returns immediately while presentation is still pending.
     await new Promise(resolve =>
       setTimeout(resolve, CONTEXT_MENU_ANIMATION_TIMEOUT_MS),
