@@ -179,6 +179,13 @@ internal class StackScreenViewManager :
             }
     }
 
+    override fun setAnimatesPush(
+        view: StackScreen,
+        value: Boolean,
+    ) {
+        // iOS only.
+    }
+
     override fun setReportsFrameToShadowTree(
         view: StackScreen,
         value: Boolean,

@@ -18,7 +18,7 @@
 
 @property (nonatomic, readonly, nonnull) RNSStackNavigationBarCoordinator *navigationBarCoordinator;
 
-/** Split columns use a native placeholder while empty. Standalone stacks keep their root screen by default. */
+/** A stack that navigates a Split column shows a native placeholder while empty. Other stacks keep their root. */
 @property (nonatomic) BOOL allowsEmptyStack;
 
 @property (nonatomic, readonly, getter=isStackEmpty) BOOL stackEmpty;
@@ -27,7 +27,6 @@
 - (nonnull UIBarButtonItem *)toolbarIconButtonForIdentifier:(nonnull NSString *)identifier;
 #endif
 
-/** Takes the controller of a stack screen, or of a split screen routed to a column's stack. */
 - (void)enqueuePushOperation:(nonnull UIViewController *)screenController animated:(BOOL)animated;
 
 - (void)enqueuePopOperation:(nonnull UIViewController *)screenController;

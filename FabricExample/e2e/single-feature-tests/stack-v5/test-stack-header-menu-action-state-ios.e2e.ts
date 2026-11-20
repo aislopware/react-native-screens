@@ -1,21 +1,20 @@
 import { by, device, element, expect } from 'detox';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
 import {
   checkmarkFor,
   CONTEXT_MENU_ANIMATION_TIMEOUT_MS,
   contextMenu,
-  describeIfiOS,
   dismissContextMenu,
-  headerItem,
-  menuRowMatcher,
+  menuRowIcon,
   openContextMenu,
-  selectSingleFeatureTestsScreen,
-} from '../../e2e-utils';
+} from '@e2e/framework/context-menu-ios';
+import { headerItem } from '@e2e/framework/header-items-ios';
+import { describeIfIOS } from '@e2e/framework/platform';
 
 const openMenu = () => openContextMenu(headerItem('Format'));
-const mixedIndicatorFor = (title: string) =>
-  element(by.id('minus').withAncestor(menuRowMatcher(title)));
+const mixedIndicatorFor = (title: string) => menuRowIcon('minus', title);
 
-describeIfiOS('Stack Header Menu Action State (iOS)', () => {
+describeIfIOS('Stack Header Menu Action State (iOS)', () => {
   beforeAll(async () => {
     await device.reloadReactNative();
     await selectSingleFeatureTestsScreen(

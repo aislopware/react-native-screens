@@ -17,11 +17,10 @@ NS_ASSUME_NONNULL_BEGIN
  * Responsible for managing multi-column layouts via associated native UISplitViewController.
  * Manages updates to the layout properties, column configuration, and event emission.
  */
-@interface RNSSplitHostComponentView : RNSReactBaseView <RNSSplitHostAppearanceProvider, RNSSplitHostBehaviorProvider>
+@interface RNSSplitHostComponentView
+    : RNSReactBaseView <RNSSplitHostAppearanceProvider, RNSSplitHostBehaviorProvider, RNSSplitHostColumnsProvider>
 
 - (nonnull NSMutableArray<RNSSplitScreenComponentView *> *)reactSubviews;
-
-- (void)splitScreenDidChangeActivityMode:(nonnull RNSSplitScreenComponentView *)screen;
 
 @property (nonatomic, nonnull, strong, readonly) RNSSplitHostController *splitHostController;
 

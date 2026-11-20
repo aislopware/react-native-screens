@@ -3,15 +3,14 @@ import { readFileSync } from 'fs';
 import { PNG } from 'pngjs';
 import type { IosElementAttributes } from 'detox/detox';
 import { by, device, element, expect, waitFor } from 'detox';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
 import {
-  describeIfiOS,
   contextMenu,
   dismissContextMenu,
-  headerItem,
-  isIOSVersionAtLeast,
   menuRow,
-  selectSingleFeatureTestsScreen,
-} from '../../e2e-utils';
+} from '@e2e/framework/context-menu-ios';
+import { headerItem } from '@e2e/framework/header-items-ios';
+import { describeIfIOS, isIOSVersionAtLeast } from '@e2e/framework/platform';
 
 const toolbarItem = (title: string) => headerItem(title);
 const button = (title: string) => element(by.text(title));
@@ -102,7 +101,7 @@ async function expectScreen(name: string) {
     .withTimeout(3000);
 }
 
-describeIfiOS('Stack Toolbar Items (iOS)', () => {
+describeIfIOS('Stack Toolbar Items (iOS)', () => {
   beforeAll(async () => {
     await device.launchApp({ newInstance: true });
     await selectSingleFeatureTestsScreen(

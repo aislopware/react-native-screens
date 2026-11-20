@@ -1,12 +1,10 @@
 import { expect as jestExpect } from '@jest/globals';
 import { device, expect, element, by } from 'detox';
-import {
-  getFrame,
-  isIOSVersionAtLeast,
-  selectSingleFeatureTestsScreen,
-  waitUntil,
-} from '../../e2e-utils';
-import { CLASS_NAME_UI_BUTTON_BAR_BUTTON } from '../../native-class-names';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
+import { getFrame } from '@e2e/framework/matchers';
+import { isIOSVersionAtLeast } from '@e2e/framework/platform';
+import { waitUntil } from '@e2e/framework/wait';
+import { CLASS_NAME_UI_BUTTON_BAR_BUTTON } from '@e2e/framework/native-classes-ios';
 
 const describeIfiOS16 = isIOSVersionAtLeast('16.0') ? describe : describe.skip;
 

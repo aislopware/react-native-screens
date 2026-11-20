@@ -1,50 +1,23 @@
 #import "RNSSplitScreenController.h"
 
 #import "RNSAssert.h"
-#import "RNSContainerItemSupport.h"
-#import "RNSHeaderCoordinator.h"
 #import "RNSSplitHostController.h"
+#import "RNSStackNavigationController.h"
 
 @implementation RNSSplitScreenController {
-  UIView<RNSStackScreenProviding> *_screenView;
-  RNSContainerItemSupport *_containerItemSupport;
+  RNSStackNavigationController *_Nullable _plainColumnNavigationController;
 }
 
-- (instancetype)initWithScreenView:(UIView<RNSStackScreenProviding> *)screenView
+- (instancetype)init
 {
   if (self = [super init]) {
-    _screenView = screenView;
-    _containerItemSupport = [RNSContainerItemSupport new];
-    _headerCoordinator = [[RNSHeaderCoordinator alloc] initWithScreenController:self];
 #if !TARGET_OS_TV
-    // Navigation bar prefers large titles, so opt out unless a header config or navigation item customizer sets a mode.
+    // Navigation bar prefers large titles, so opt out unless a navigation item customizer sets a mode.
     self.navigationItem.largeTitleDisplayMode = UINavigationItemLargeTitleDisplayModeNever;
 #endif // !TARGET_OS_TV
   }
 
   return self;
-}
-
-// Register nested stacks so column navigation can consult their removal guards.
-- (void)registerNestedContainer:(id<RNSContainer>)container
-{
-  [_containerItemSupport registerNestedContainer:container];
-}
-
-- (void)unregisterNestedContainer:(id<RNSContainer>)container
-{
-  [_containerItemSupport unregisterNestedContainer:container];
-}
-
-- (nullable id<RNSContainer>)resolveNestedContainer
-{
-  return [_containerItemSupport resolveNestedContainer];
-}
-
-- (nullable UIScrollView *)findContentScrollView
-{
-  return [_containerItemSupport findContentScrollViewWithCachedScrollView:nil
-                                                            heuristicRoot:_screenView];
 }
 
 /**
@@ -67,7 +40,44 @@
   return [self.splitViewController isKindOfClass:RNSSplitHostController.class];
 }
 
+#pragma mark - Navigation controller
+
+/**
+ * TODO: Make the content of a column that does not host a stack a stack screen as well: an RNSStackScreenController
+ * with a plain view, under which the React content of the column is mounted. This controller leaves the view
+ * controller hierarchy then.
+ *
+ * RNSStackNavigationController is meant to hold RNSStackScreenController instances only. For a column that does not
+ * host a stack, this controller is still the root, as it was before the navigation controller of a column became a
+ * stack one.
+ *
+ * A navigation controller that holds this controller is never used by a stack: nothing is pushed onto it or popped
+ * from it.
+ */
+- (RNSStackNavigationController *)plainColumnNavigationController
+{
+  if (_plainColumnNavigationController == nil) {
+    // `initWithRootViewController:` would skip the `init` of RNSStackNavigationController, which sets up its navigation
+    // bar. The controller is created with `init` and gets its root afterwards.
+    _plainColumnNavigationController = [RNSStackNavigationController new];
+    _plainColumnNavigationController.viewControllers = @[ self ];
+    _plainColumnNavigationController.viewLifecycleEventsObserver = self;
+  }
+  return _plainColumnNavigationController;
+}
+
+- (void)releasePlainColumnNavigationController
+{
+  _plainColumnNavigationController.viewLifecycleEventsObserver = nil;
+  _plainColumnNavigationController = nil;
+}
+
 #pragma mark - Signals
+
+- (void)setNeedsLifecycleStateUpdate
+{
+  [[self findSplitHostController] setNeedsUpdateOfChildViewControllers];
+}
 
 #pragma mark - Layout
 
@@ -79,10 +89,6 @@
   // we're attaching our touch handler and we don't need to apply any offset corrections,
   // because it's positioned relatively to the column view
   if (![self isInSplitHostSubtree]) {
-    // A screen leaving its column has no navigation controller anymore; its frame is meaningless then.
-    if (self.navigationController == nil) {
-      return;
-    }
     [_delegate splitScreenController:self didChangeColumnFrame:self.view.frame];
     return;
   }
@@ -100,65 +106,30 @@
 
 - (void)reportColumnFrameInContextOfView:(UIView *)ancestorView
 {
-  // The column frame is the navigation controller's view frame, not the screen's: UIKit animates the screen view
-  // during push and pop transitions, the column stays put.
-  UIView *columnView = self.navigationController.view ?: self.view;
-  CGRect frame = [columnView convertRect:columnView.bounds toView:ancestorView];
+  CGRect frame = [self.view convertRect:self.view.frame toView:ancestorView];
   [_delegate splitScreenController:self didChangeColumnFrame:frame];
 }
 
-#pragma mark - Events
+#pragma mark - RNSViewControllerViewLifecycleEventsObserver
 
-- (void)viewWillAppear:(BOOL)animated
+- (void)viewControllerViewWillAppear:(UIViewController *)viewController
 {
-  [super viewWillAppear:animated];
-  // Without a header config the column keeps the system navigation bar, so the coordinator is not consulted.
-  if (_screenView.headerConfig != nil) {
-    [_headerCoordinator updateNavigationBarVisibilityAnimated:animated];
-#if !TARGET_OS_TV
-    [_headerCoordinator updateBackButtonMenuEnabled];
-#endif // !TARGET_OS_TV
-  }
   [_delegate splitScreenControllerWillAppear:self];
 }
 
-- (void)viewDidAppear:(BOOL)animated
+- (void)viewControllerViewDidAppear:(UIViewController *)viewController
 {
-  [super viewDidAppear:animated];
-  if (_screenView.headerConfig != nil) {
-    [_headerCoordinator restoreDetachedTitleView];
-  }
   [_delegate splitScreenControllerDidAppear:self];
 }
 
-- (void)viewWillDisappear:(BOOL)animated
+- (void)viewControllerViewWillDisappear:(UIViewController *)viewController
 {
-  [super viewWillDisappear:animated];
   [_delegate splitScreenControllerWillDisappear:self];
 }
 
-- (void)viewDidDisappear:(BOOL)animated
+- (void)viewControllerViewDidDisappear:(UIViewController *)viewController
 {
-  [super viewDidDisappear:animated];
   [_delegate splitScreenControllerDidDisappear:self];
-}
-
-- (void)didMoveToParentViewController:(UIViewController *)parent
-{
-  [super didMoveToParentViewController:parent];
-
-  if (parent != nil) {
-    return;
-  }
-
-#if !TARGET_OS_TV
-  [_headerCoordinator clearAppliedBackButtonConfig];
-#endif // !TARGET_OS_TV
-
-  // A screen React still expects on the stack left it natively (e.g. the back button); a detached one was popped on
-  // React's request.
-  BOOL isNativeDismiss = _screenView.activityMode == RNSStackScreenActivityModeAttached;
-  [_delegate splitScreenController:self didDismissNatively:isNativeDismiss];
 }
 
 @end

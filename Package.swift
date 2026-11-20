@@ -50,7 +50,6 @@ let headerSearchPaths: [String] = [
     "ios/react/views/scroll-to-top-guard",
     "ios/react/views/scroll-view-marker",
     "ios/react/views/scroll-view-marker/conversion",
-    "ios/split",
     "common/cpp",
     "cpp/legacy",
 ]

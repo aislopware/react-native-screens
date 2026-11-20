@@ -1,19 +1,18 @@
 import { by, device, element, expect } from 'detox';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
 import {
-  contextMenu,
   CONTEXT_MENU_ANIMATION_TIMEOUT_MS,
-  countMatches,
-  describeIfiOS,
+  contextMenu,
   dismissContextMenu,
-  getFrame,
-  headerItem,
   openContextMenu,
-  selectSingleFeatureTestsScreen,
-} from '../../e2e-utils';
+} from '@e2e/framework/context-menu-ios';
+import { headerItem } from '@e2e/framework/header-items-ios';
+import { countMatches, getFrame } from '@e2e/framework/matchers';
+import { describeIfIOS } from '@e2e/framework/platform';
 import {
   CLASS_NAME_UI_CONTEXT_MENU_CELL_CONTENT_VIEW,
   CLASS_NAME_UI_CONTEXT_MENU_LIST_VIEW,
-} from '../../native-class-names';
+} from '@e2e/framework/native-classes-ios';
 
 const openMenu = () => openContextMenu(headerItem('Actions'));
 const notificationsCheckmark = () =>
@@ -40,7 +39,7 @@ async function tapDisabledItem(title: string) {
   }
 }
 
-describeIfiOS('Stack Header Menu Presentation (iOS)', () => {
+describeIfIOS('Stack Header Menu Presentation (iOS)', () => {
   beforeAll(async () => {
     await device.reloadReactNative();
     await selectSingleFeatureTestsScreen(

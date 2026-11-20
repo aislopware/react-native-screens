@@ -178,4 +178,15 @@ export type StackScreenProps = {
    * @platform android
    */
   replaceAnimation?: StackScreenReplaceAnimation | undefined;
+  /**
+   * Whether pushing this screen onto the stack is animated.
+   *
+   * @remarks
+   * With `false` the screen appears in place. Popping it is still animated.
+   * The value is read when the screen is pushed.
+   *
+   * @defaultValue `true`
+   * @platform ios
+   */
+  animatesPush?: boolean | undefined;
 };

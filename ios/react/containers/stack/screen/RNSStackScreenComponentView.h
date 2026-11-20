@@ -27,6 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong, readonly, nullable) NSString *screenKey;
 @property (nonatomic, readonly) RNSStackScreenActivityMode activityMode;
+@property (nonatomic, readonly) BOOL animatesPush;
 
 @end
 

@@ -25,6 +25,7 @@ namespace react = facebook::react;
   RNSStackOperationCoordinator *_Nonnull _stackOperationCoordinator;
   NSMutableArray<UIView<RNSStackScreenProviding> *> *_Nonnull _renderedScreens;
   BOOL _didSetHeadlessModeEnabled;
+  BOOL _isWaitingForTransition;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -54,9 +55,9 @@ namespace react = facebook::react;
   if (_headlessModeEnabled) {
     if (self.window != nil) {
       RNSLogE(
-          @"[RNScreens] Stack.Host is rendered in a Split.Column, but it is not the direct and only child of the "
-          @"column, so the stack is not shown. Set disableStackIntegration on the Split.Column to nest the "
-          @"stack as plain content.");
+          @"[RNScreens] Stack.Host is rendered in a Split.Column or a Split.Inspector, but it is not its direct and "
+          @"only child, so the stack is not shown. Set disableStackIntegration on the column or the inspector to "
+          @"nest the stack as plain content.");
     }
     return;
   }
@@ -156,6 +157,8 @@ namespace react = facebook::react;
       RNSLogW(@"[RNScreens] Changing the headless mode of Stack.Host at runtime is not supported");
     } else {
       _headlessModeEnabled = newComponentProps.headlessModeEnabled;
+      // A Split column stays installed while none of its screens is attached.
+      _stackNavigationController.allowsEmptyStack = _headlessModeEnabled;
     }
   }
   _didSetHeadlessModeEnabled = YES;
@@ -217,8 +220,41 @@ namespace react = facebook::react;
 - (void)mountingTransactionDidMount:(const facebook::react::MountingTransaction &)transaction
                withSurfaceTelemetry:(const facebook::react::SurfaceTelemetry &)surfaceTelemetry
 {
+  // The screens are translated to operations now: an unmounted screen gives its controller up before a deferred
+  // commit runs.
   [_stackOperationCoordinator enqueuePendingOperationsIfNeeded:_stackNavigationController
                                            withRenderedScreens:_renderedScreens];
+  [self commitTransactionWhenSplitIsIdle];
+}
+
+- (void)commitTransactionWhenSplitIsIdle
+{
+  if (_isWaitingForTransition) {
+    return;
+  }
+
+  // A Split that was just asked to show a column has its transition pending, before the navigation controllers of
+  // its columns take part in it.
+  id<UIViewControllerTransitionCoordinator> coordinator = _stackNavigationController.transitionCoordinator
+      ?: _stackNavigationController.splitViewController.transitionCoordinator;
+  if (_headlessModeEnabled && coordinator != nil) {
+    // UIKit can ignore pops while the Split is showing or hiding the column, and the column change when a pop
+    // lands first.
+    _isWaitingForTransition = YES;
+    __weak RNSStackHostComponentView *weakSelf = self;
+    [coordinator animateAlongsideTransition:nil
+                                 completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+                                   dispatch_async(dispatch_get_main_queue(), ^{
+                                     RNSStackHostComponentView *strongSelf = weakSelf;
+                                     if (strongSelf != nil) {
+                                       strongSelf->_isWaitingForTransition = NO;
+                                       [strongSelf commitTransactionWhenSplitIsIdle];
+                                     }
+                                   });
+                                 }];
+    return;
+  }
+
   [_stackNavigationController commitTransaction];
 }
 

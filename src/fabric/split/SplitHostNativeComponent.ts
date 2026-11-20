@@ -70,9 +70,6 @@ interface ColumnMetrics {
 }
 
 interface NativeProps extends ViewProps {
-  // Column declarations survive even when a Split.Stack has no screens.
-  numberOfColumns?: CT.WithDefault<CT.Int32, 0>;
-
   // Appearance
 
   preferredDisplayMode?: CT.WithDefault<SplitViewDisplayMode, 'automatic'>;

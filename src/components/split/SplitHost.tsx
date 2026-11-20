@@ -8,7 +8,7 @@ import type {
   SplitHostProps,
   SplitBehavior,
 } from './SplitHost.types';
-import SplitScreen, { SplitColumnIndexContext } from './SplitScreen';
+import SplitScreen from './SplitScreen';
 
 type NativeRef = React.ComponentRef<typeof SplitHostNativeComponent>;
 type NativeProps = React.ComponentProps<typeof SplitHostNativeComponent>;
@@ -100,22 +100,6 @@ function SplitHost({ ref, onDisplayModeWillChange, ...props }: SplitHostProps) {
     child => child.type === SplitScreen.Inspector,
   );
 
-  // Every column learns its index through context, so that its screens can be routed to the right column natively.
-  let columnIndex = 0;
-  const indexedChildren = children.map(child => {
-    if (React.isValidElement(child) && child.type === SplitScreen.Column) {
-      const index = columnIndex++;
-      return (
-        <SplitColumnIndexContext.Provider
-          key={child.key ?? `column-${index}`}
-          value={index}>
-          {child}
-        </SplitColumnIndexContext.Provider>
-      );
-    }
-    return child;
-  });
-
   return (
     <SplitHostNativeComponent
       ref={nativeRef}
@@ -124,13 +108,12 @@ function SplitHost({ ref, onDisplayModeWillChange, ...props }: SplitHostProps) {
       // This enables us to fully recreate the Split when necessary, ensuring the correct column configuration is always applied.
       key={`columns-${columns.length}-inspectors-${inspectors.length}`}
       {...props}
-      numberOfColumns={columns.length}
       // The native spec types the display modes as strings, see the TODO there.
       onDisplayModeWillChange={
         onDisplayModeWillChange as NativeProps['onDisplayModeWillChange']
       }
       style={styles.container}>
-      {indexedChildren}
+      {props.children}
     </SplitHostNativeComponent>
   );
 }

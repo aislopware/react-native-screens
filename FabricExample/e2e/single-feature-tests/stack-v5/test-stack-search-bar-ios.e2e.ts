@@ -1,5 +1,6 @@
 import { by, device, element, expect, waitFor } from 'detox';
-import { describeIfiOS, selectSingleFeatureTestsScreen } from '../../e2e-utils';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
+import { describeIfIOS } from '@e2e/framework/platform';
 
 const searchField = () => element(by.type('UISearchTextField'));
 
@@ -16,7 +17,7 @@ async function expectUnfocused() {
   await expect(searchField()).not.toBeFocused();
 }
 
-describeIfiOS('Stack search bar (iOS)', () => {
+describeIfIOS('Stack search bar (iOS)', () => {
   beforeEach(async () => {
     await device.reloadReactNative();
     await selectSingleFeatureTestsScreen(

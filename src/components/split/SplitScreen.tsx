@@ -1,75 +1,68 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
+import warnOnce from 'warn-once';
 import SplitScreenNativeComponent from '../../fabric/split/SplitScreenNativeComponent';
-import type { SplitScreenProps, SplitStackProps } from './SplitScreen.types';
+import SplitColumnMarkerContext from './SplitColumnMarkerContext';
+import type {
+  SplitColumnProps,
+  SplitInspectorProps,
+} from './SplitScreen.types';
 
 /**
- * Index of the column assigned by `Split.Host` to each `Split.Column`; read by the screens of the column.
+ * Whether the integration with a stack is on. It is configured once, when the
+ * column or the inspector is mounted. `Stack.Host` and `Stack.Screen` read it
+ * from the context.
  */
-export const SplitColumnIndexContext = React.createContext<number>(-1);
+function useStackIntegration(
+  componentName: string,
+  disableStackIntegration: boolean,
+) {
+  const [isStackIntegrationDisabled] = React.useState(disableStackIntegration);
 
-/**
- * A column is navigated with `Split.Stack` here, so a `Stack.Host` rendered in it is always nested as plain content:
- * `SplitColumnMarkerContext` is never provided, and `disableStackIntegration` is dropped instead of reaching the
- * native component.
- */
-function toNativeProps(props: SplitScreenProps) {
-  const nativeProps = { ...props };
-  delete nativeProps.disableStackIntegration;
-  return nativeProps;
+  React.useEffect(() => {
+    warnOnce(
+      disableStackIntegration !== isStackIntegrationDisabled,
+      `[RNScreens] \`disableStackIntegration\` of ${componentName} cannot be changed after it is mounted. The change is ignored.`,
+    );
+  }, [componentName, disableStackIntegration, isStackIntegrationDisabled]);
+
+  return !isStackIntegrationDisabled;
 }
 
-/**
- * A screen in the navigation stack of a column.
- */
-function Screen(props: SplitScreenProps) {
-  const column = React.useContext(SplitColumnIndexContext);
+function Column(props: SplitColumnProps) {
+  const { children, disableStackIntegration = false, ...restProps } = props;
+  const isStackIntegrationEnabled = useStackIntegration(
+    'Split.Column',
+    disableStackIntegration,
+  );
+
   return (
     <SplitScreenNativeComponent
       columnType="column"
-      column={column}
-      {...toNativeProps(props)}
+      {...restProps}
       style={StyleSheet.absoluteFill}>
-      {props.children}
+      <SplitColumnMarkerContext.Provider value={isStackIntegrationEnabled}>
+        {children}
+      </SplitColumnMarkerContext.Provider>
     </SplitScreenNativeComponent>
   );
 }
 
-/**
- * The navigation stack of a column. It has no native counterpart: its screens are mounted directly in the host and
- * routed to the column by index.
- */
-function Stack(props: SplitStackProps) {
-  return <>{props.children}</>;
-}
-
-/**
- * A column. With a `Split.Stack` child it is a JS-only grouping of the stack's screens and must not have other
- * children; otherwise the column itself is a single screen.
- */
-function Column(props: SplitScreenProps) {
-  const children = React.Children.toArray(props.children);
-  const hasStack = children.some(
-    child => React.isValidElement(child) && child.type === Stack,
+function Inspector(props: SplitInspectorProps) {
+  const { children, disableStackIntegration = false, ...restProps } = props;
+  const isStackIntegrationEnabled = useStackIntegration(
+    'Split.Inspector',
+    disableStackIntegration,
   );
-  if (hasStack) {
-    if (children.length > 1) {
-      console.error(
-        '[RNScreens] Split.Column with a Split.Stack child must not have other children',
-      );
-    }
-    return <>{props.children}</>;
-  }
-  return <Screen {...props} />;
-}
 
-function Inspector(props: SplitScreenProps) {
   return (
     <SplitScreenNativeComponent
       columnType="inspector"
-      {...toNativeProps(props)}
+      {...restProps}
       style={StyleSheet.absoluteFill}>
-      {props.children}
+      <SplitColumnMarkerContext.Provider value={isStackIntegrationEnabled}>
+        {children}
+      </SplitColumnMarkerContext.Provider>
     </SplitScreenNativeComponent>
   );
 }
@@ -77,8 +70,6 @@ function Inspector(props: SplitScreenProps) {
 // TODO: refactor to drop `Screen` suffix as the API name is really long at the moment
 const SplitScreen = {
   Column,
-  Stack,
-  Screen,
   Inspector,
 };
 

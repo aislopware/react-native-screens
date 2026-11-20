@@ -90,12 +90,13 @@ namespace react = facebook::react;
     return;
   }
 
-  UIView *splitView = _controller.splitViewController.view;
-  if (splitView == nil) {
+  // An inspector presented as a modal is outside the split; its touch handler is on the navigation controller's view.
+  UIView *referenceView = _controller.splitViewController.view ?: _controller.navigationController.view;
+  if (referenceView == nil) {
     return;
   }
 
-  CGRect frame = {[self convertPoint:CGPointZero toView:splitView], self.bounds.size};
+  CGRect frame = {[self convertPoint:CGPointZero toView:referenceView], self.bounds.size};
   [_shadowStateProxy updateShadowStateWithFrame:frame];
 }
 
@@ -108,6 +109,7 @@ namespace react = facebook::react;
   _screenKey = nil;
   _activityMode = RNSStackScreenActivityModeDetached;
   _preventNativeDismiss = NO;
+  _animatesPush = YES;
 }
 
 - (void)setupController
@@ -230,6 +232,7 @@ namespace react = facebook::react;
   }
 
   _preventNativeDismiss = newComponentProps.preventNativeDismiss;
+  _animatesPush = newComponentProps.animatesPush;
 
   if (oldComponentProps.screenKey != newComponentProps.screenKey) {
     RCTAssert(_screenKey == nil, @"[RNScreens] ScreenController cannot change its screenKey");

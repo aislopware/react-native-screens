@@ -6,15 +6,11 @@ const NOOP = () => {
 };
 
 const Column = NOOP;
-const Stack = NOOP;
-const Screen = NOOP;
 const Inspector = NOOP;
 
 // TODO: refactor to drop `Screen` suffix as the API name is really long at the moment
 const SplitScreen = {
   Column,
-  Stack,
-  Screen,
   Inspector,
 };
 

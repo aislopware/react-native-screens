@@ -1,6 +1,7 @@
 import { device, expect, element, by } from 'detox';
-import { describeIfiOS, selectSingleFeatureTestsScreen } from '../../e2e-utils';
-import { CLASS_NAME_UI_BUTTON_BAR_BUTTON } from '../../native-class-names';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
+import { describeIfIOS } from '@e2e/framework/platform';
+import { CLASS_NAME_UI_BUTTON_BAR_BUTTON } from '@e2e/framework/native-classes-ios';
 
 function navigationBar(title: string) {
   return by.type('UINavigationBar').withDescendant(by.text(title));
@@ -20,7 +21,7 @@ async function expectHiddenBackButton(title: string) {
   await expect(backButton(title)).not.toExist();
 }
 
-describeIfiOS('Stack v5: backButtonHidden', () => {
+describeIfIOS('Stack v5: backButtonHidden', () => {
   beforeAll(async () => {
     await device.reloadReactNative();
     await selectSingleFeatureTestsScreen(

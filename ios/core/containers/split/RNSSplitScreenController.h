@@ -1,11 +1,10 @@
 #pragma once
 
 #import <UIKit/UIKit.h>
-#import "RNSContainerItem.h"
-#import "RNSStackScreenProviding.h"
+#import "RNSViewControllerViewLifecycleEventsObserver.h"
 
 @class RNSSplitScreenController;
-@class RNSHeaderCoordinator;
+@class RNSStackNavigationController;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -27,13 +26,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)splitScreenControllerDidAppear:(RNSSplitScreenController *)controller;
 - (void)splitScreenControllerWillDisappear:(RNSSplitScreenController *)controller;
 - (void)splitScreenControllerDidDisappear:(RNSSplitScreenController *)controller;
-/**
- * @brief Called when the screen left the navigation stack of its column.
- *
- * @param isNativeDismiss YES when the screen was removed natively (e.g. by the back button) while React still
- * expects it to be attached.
- */
-- (void)splitScreenController:(RNSSplitScreenController *)controller didDismissNatively:(BOOL)isNativeDismiss;
 
 @end
 
@@ -41,17 +33,32 @@ NS_ASSUME_NONNULL_BEGIN
  * @class RNSSplitScreenController
  * @brief A UIViewController subclass that manages a Split column in a UISplitViewController.
  *
- * Associated with the view of a Split screen, it observes the column layout and lifecycle, reports them to its
- * delegate, and interacts with the SplitHost hierarchy.
+ * It observes the column layout and lifecycle and reports them to its delegate.
+ *
+ * The lifecycle of the column is the one of the view of the navigation controller the Split installs for it. In a
+ * column that hosts a stack it is the navigation controller of the stack, and this controller has to be set as its
+ * `viewLifecycleEventsObserver`.
  */
-@interface RNSSplitScreenController : UIViewController <RNSContainerItem>
+@interface RNSSplitScreenController : UIViewController <RNSViewControllerViewLifecycleEventsObserver>
 
 @property (nonatomic, weak, nullable) id<RNSSplitScreenControllerDelegate> delegate;
 
-/** @brief Applies the screen's `RNSHeaderConfig`, if any, to its navigation item. */
-@property (nonatomic, strong, readonly, nonnull) RNSHeaderCoordinator *headerCoordinator;
+#pragma mark - Navigation controller
 
-- (instancetype)initWithScreenView:(UIView<RNSStackScreenProviding> *)screenView;
+/**
+ * @brief The navigation controller the Split installs for a plain column, i.e. a column that does not host a stack.
+ * It is rooted at this controller.
+ *
+ * Created on first access and kept until `releasePlainColumnNavigationController`.
+ */
+@property (nonatomic, strong, readonly) RNSStackNavigationController *plainColumnNavigationController;
+
+/**
+ * @brief Releases `plainColumnNavigationController`.
+ *
+ * The navigation controller retains this controller as its root, so the column has to call it before it is destroyed.
+ */
+- (void)releasePlainColumnNavigationController;
 
 #pragma mark - Signals
 
@@ -63,6 +70,8 @@ NS_ASSUME_NONNULL_BEGIN
  * @return true if inside RNSSplitHostController, false otherwise.
  */
 - (BOOL)isInSplitHostSubtree;
+
+- (void)setNeedsLifecycleStateUpdate;
 
 #pragma mark - Layout
 

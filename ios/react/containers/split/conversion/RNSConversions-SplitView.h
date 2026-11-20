@@ -7,7 +7,6 @@
 #import <optional>
 #import <string>
 #import "RNSEnums.h"
-#import "RNSStackScreenProviding.h"
 
 namespace rnscreens::conversion {
 
@@ -57,8 +56,6 @@ UIUserInterfaceStyle UIUserInterfaceStyleFromHostProp(
 
 RNSSplitScreenColumnType RNSSplitScreenColumnTypeFromScreenProp(
     react::RNSSplitScreenColumnType columnType);
-
-RNSStackScreenActivityMode RNSStackScreenActivityModeFromSplitScreenProp(react::RNSSplitScreenActivityMode activityMode);
 
 }; // namespace rnscreens::conversion
 

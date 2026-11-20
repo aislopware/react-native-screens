@@ -1,7 +1,8 @@
 import { by, device, element, expect, waitFor } from 'detox';
-import { describeIfiOS, selectSingleFeatureTestsScreen } from '../../e2e-utils';
+import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
+import { describeIfIOS, describeIfIOSAtLeast } from '@e2e/framework/platform';
 
-describeIfiOS('Split: empty stack columns', () => {
+describeIfIOS('Split: empty stack columns', () => {
   beforeAll(async () => {
     await device.reloadReactNative();
     await selectSingleFeatureTestsScreen(
@@ -67,5 +68,48 @@ describeIfiOS('Split: empty stack columns', () => {
     await element(by.text('Select detail')).tap();
     await element(by.text('Show detail')).tap();
     await expect(element(by.id('empty-column-detail-9'))).toBeVisible();
+  });
+
+  it('pushes a detail in place and clears the stack afterwards', async () => {
+    await element(by.text('Select detail in place')).tap();
+    await expect(element(by.id('empty-column-detail-10'))).toBeVisible();
+    await element(by.text('Clear details')).tap();
+    await waitFor(element(by.id('empty-column-state')))
+      .toHaveText('Details: 0; dismissals: 7')
+      .withTimeout(5000);
+    await expect(element(by.id('empty-column-list'))).toBeVisible();
+  });
+});
+
+describeIfIOSAtLeast('26.0')('Split: empty stack inspector', () => {
+  beforeAll(async () => {
+    await device.reloadReactNative();
+    await selectSingleFeatureTestsScreen(
+      'Split',
+      'test-split-empty-stack-columns-ios',
+    );
+  });
+
+  it('shows the inspector with an empty stack and populates it', async () => {
+    await element(by.text('Toggle inspector')).tap();
+    await expect(element(by.id('empty-column-inspector-files'))).not.toExist();
+    await element(by.text('Populate inspector')).tap();
+    await expect(element(by.id('empty-column-inspector-files'))).toBeVisible();
+  });
+
+  it('handles touches in the inspector and hides it', async () => {
+    await element(by.text('Close inspector')).tap();
+    await expect(
+      element(by.id('empty-column-inspector-files')),
+    ).not.toBeVisible();
+  });
+
+  it('switches the pane while the inspector is hidden', async () => {
+    await element(by.text('Switch inspector pane')).tap();
+    await element(by.text('Toggle inspector')).tap();
+    await expect(
+      element(by.id('empty-column-inspector-terminal')),
+    ).toBeVisible();
+    await expect(element(by.id('empty-column-inspector-files'))).not.toExist();
   });
 });

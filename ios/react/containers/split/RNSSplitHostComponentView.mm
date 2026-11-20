@@ -6,7 +6,7 @@
 #import <react/renderer/components/rnscreens/RCTComponentViewHelpers.h>
 
 #import "RNSContainerHelpers.h"
-#import "RNSConversions.h"
+#import "RNSConversions-SplitView.h"
 #import "RNSDefines.h"
 #import "RNSScreenWindowTraits.h" // legacy-compat: v5 has no orientation system of its own yet (D5a)
 #import "RNSSplitHostComponentEventEmitter.h"
@@ -32,6 +32,7 @@ static const CGFloat epsilon = 1e-6;
   RNSSplitHostController *_Nonnull _controller;
   NSMutableArray<RNSSplitScreenComponentView *> *_Nonnull _reactSubviews;
 
+  bool _hasModifiedReactSubviewsInCurrentTransaction;
   bool _needsSplitAppearanceUpdate;
   bool _needsSplitSecondaryScreenNavBarUpdate;
   bool _needsSplitDisplayModeUpdate;
@@ -54,6 +55,7 @@ static const CGFloat epsilon = 1e-6;
 
   _reactEventEmitter = [RNSSplitHostComponentEventEmitter new];
 
+  _hasModifiedReactSubviewsInCurrentTransaction = false;
   _needsSplitAppearanceUpdate = false;
   _needsSplitSecondaryScreenNavBarUpdate = false;
   _needsSplitDisplayModeUpdate = false;
@@ -105,47 +107,13 @@ static const CGFloat epsilon = 1e-6;
 
 - (int)getNumberOfColumns
 {
-  const auto &props = *std::static_pointer_cast<const react::RNSSplitHostProps>(_props);
-  if (props.numberOfColumns > 0) {
-    return props.numberOfColumns;
-  }
-
-  NSMutableSet<NSNumber *> *columns = [NSMutableSet set];
-  for (RNSSplitScreenComponentView *screen in _reactSubviews) {
-    if (screen.columnType == RNSSplitScreenColumnTypeColumn) {
-      [columns addObject:@(screen.column)];
+  int numberOfColumns = 0;
+  for (RNSSplitScreenComponentView *component in _reactSubviews) {
+    if (component.columnType == RNSSplitScreenColumnTypeColumn) {
+      numberOfColumns++;
     }
   }
-  return (int)columns.count;
-}
-
-/** @brief The column a screen belongs to as the host controller sees it: its index, or `-1` for the inspector. */
-- (NSInteger)columnOfScreen:(RNSSplitScreenComponentView *)screen
-{
-  if (screen.columnType == RNSSplitScreenColumnTypeInspector) {
-    return -1;
-  }
-  RCTAssert(screen.column >= 0, @"[RNScreens] Split column screens must carry the index of their column");
-  return screen.column;
-}
-
-- (void)splitScreenDidChangeActivityMode:(RNSSplitScreenComponentView *)screen
-{
-  // Before the controller exists the current value is picked up when the screen is handed over.
-  [_controller screenDidChangeActivityMode:screen inColumn:[self columnOfScreen:screen]];
-}
-
-/** @brief Hands a screen at the given position of `_reactSubviews` over to its column. */
-- (void)routeInsertedScreen:(RNSSplitScreenComponentView *)screen atIndex:(NSInteger)index
-{
-  NSInteger column = [self columnOfScreen:screen];
-  NSInteger indexInColumn = 0;
-  for (NSInteger i = 0; i < index; i++) {
-    if ([self columnOfScreen:_reactSubviews[i]] == column) {
-      indexInColumn++;
-    }
-  }
-  [_controller insertScreen:screen inColumn:column atIndex:indexInColumn];
+  return numberOfColumns;
 }
 
 - (void)setupController
@@ -160,17 +128,14 @@ static const CGFloat epsilon = 1e-6;
     _controller.eventsDelegate = self;
     _controller.appearanceProvider = self;
     _controller.behaviorProvider = self;
+    _controller.columnsProvider = self;
     _controller.orientationDelegate = self;
-
-    // Children mount before the host reaches the window, i.e. before the controller exists; hand them over now.
-    [_reactSubviews enumerateObjectsUsingBlock:^(RNSSplitScreenComponentView *screen, NSUInteger index, BOOL *stop) {
-      [self routeInsertedScreen:screen atIndex:(NSInteger)index];
-    }];
   }
 }
 
 - (void)didMoveToWindow
 {
+  BOOL isControllerCreatedNow = _controller == nil;
   [self setupController];
   RCTAssert(_controller != nil, @"[RNScreens] Controller must not be nil while attaching to window");
   [self requestSplitHostControllerForAppearanceUpdate];
@@ -178,6 +143,15 @@ static const CGFloat epsilon = 1e-6;
     [RNSContainerHelpers addChildViewController:_controller
                        toViewControllerManaging:self.reactSuperview
                               withContainerView:self];
+    // UIKit creates the view with the size of the window. Its autoresizing mask keeps it in the host from here on.
+    _controller.view.frame = self.bounds;
+  }
+
+  // The host can reach the window after the transaction that mounted its columns has ended, e.g. on a screen pushed
+  // with an animation. No transaction is left to hand the columns over to the controller then.
+  if (isControllerCreatedNow && !_hasModifiedReactSubviewsInCurrentTransaction) {
+    [_controller setNeedsUpdateOfChildViewControllers];
+    [_controller commitTransaction];
   }
 }
 
@@ -209,9 +183,7 @@ RNS_IGNORE_SUPER_CALL_END
   auto *childScreen = static_cast<RNSSplitScreenComponentView *>(childComponentView);
   childScreen.splitHost = self;
   [_reactSubviews insertObject:childScreen atIndex:index];
-  if (_controller != nil) {
-    [self routeInsertedScreen:childScreen atIndex:index];
-  }
+  _hasModifiedReactSubviewsInCurrentTransaction = true;
 }
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
@@ -222,11 +194,9 @@ RNS_IGNORE_SUPER_CALL_END
             RNSSplitScreenComponentView.class);
 
   auto *childScreen = static_cast<RNSSplitScreenComponentView *>(childComponentView);
-  if (_controller != nil) {
-    [_controller removeScreen:childScreen inColumn:[self columnOfScreen:childScreen]];
-  }
   childScreen.splitHost = nil;
   [_reactSubviews removeObject:childScreen];
+  _hasModifiedReactSubviewsInCurrentTransaction = true;
 }
 
 + (react::ComponentDescriptorProvider)componentDescriptorProvider
@@ -428,13 +398,18 @@ RNS_IGNORE_SUPER_CALL_END
 - (void)mountingTransactionWillMount:(const facebook::react::MountingTransaction &)transaction
                 withSurfaceTelemetry:(const facebook::react::SurfaceTelemetry &)surfaceTelemetry
 {
+  _hasModifiedReactSubviewsInCurrentTransaction = false;
   [_controller beginTransaction];
 }
 
 - (void)mountingTransactionDidMount:(const facebook::react::MountingTransaction &)transaction
                withSurfaceTelemetry:(const facebook::react::SurfaceTelemetry &)surfaceTelemetry
 {
+  if (_hasModifiedReactSubviewsInCurrentTransaction) {
+    [_controller setNeedsUpdateOfChildViewControllers];
+  }
   [_controller commitTransaction];
+  _hasModifiedReactSubviewsInCurrentTransaction = false;
 }
 
 - (void)updateEventEmitter:(const facebook::react::EventEmitter::Shared &)eventEmitter
@@ -469,6 +444,50 @@ RNS_IGNORE_SUPER_CALL_END
 }
 
 #pragma mark - Events
+
+#pragma mark - RNSSplitHostColumnsProvider
+
+- (NSArray<RNSSplitScreenController *> *)columnControllers
+{
+  return [self controllersOfColumnsWithType:RNSSplitScreenColumnTypeColumn];
+}
+
+- (NSArray<RNSSplitScreenController *> *)inspectorControllers
+{
+  return [self controllersOfColumnsWithType:RNSSplitScreenColumnTypeInspector];
+}
+
+- (NSArray<RNSStackNavigationController *> *)columnNavigationControllers
+{
+  return [self navigationControllersOfColumnsWithType:RNSSplitScreenColumnTypeColumn];
+}
+
+- (NSArray<RNSStackNavigationController *> *)inspectorNavigationControllers
+{
+  return [self navigationControllersOfColumnsWithType:RNSSplitScreenColumnTypeInspector];
+}
+
+- (NSArray<RNSStackNavigationController *> *)navigationControllersOfColumnsWithType:(RNSSplitScreenColumnType)columnType
+{
+  NSMutableArray<RNSStackNavigationController *> *navigationControllers = [NSMutableArray array];
+  for (RNSSplitScreenComponentView *column in _reactSubviews) {
+    if (column.columnType == columnType) {
+      [navigationControllers addObject:column.columnNavigationController];
+    }
+  }
+  return navigationControllers;
+}
+
+- (NSArray<RNSSplitScreenController *> *)controllersOfColumnsWithType:(RNSSplitScreenColumnType)columnType
+{
+  NSMutableArray<RNSSplitScreenController *> *controllers = [NSMutableArray array];
+  for (RNSSplitScreenComponentView *column in _reactSubviews) {
+    if (column.columnType == columnType) {
+      [controllers addObject:column.controller];
+    }
+  }
+  return controllers;
+}
 
 #pragma mark - RNSSplitHostControllerEventsDelegate
 

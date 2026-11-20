@@ -1,22 +1,39 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import { Split, SplitHostCommands } from 'react-native-screens';
+import { Split, SplitHostCommands, Stack } from 'react-native-screens';
 import { createScenario } from '@apps/tests/shared/helpers';
 import { scenarioDescription } from './scenario-description';
 
-type ScreenState = { key: string; activityMode: 'attached' | 'detached' };
+type ScreenState = {
+  key: string;
+  activityMode: 'attached' | 'detached';
+  animatesPush: boolean;
+};
 
+const INSPECTOR_PANES = ['files', 'terminal'] as const;
+type InspectorPane = (typeof INSPECTOR_PANES)[number];
+
+/**
+ * Every column is navigated by a `Stack.Host`. The detail column and the inspector start with no attached screen, and
+ * can be emptied again.
+ */
 function TestSplitEmptyStackColumns() {
   const hostRef = React.useRef<SplitHostCommands>(null);
   const nextId = React.useRef(1);
   const [details, setDetails] = React.useState<ScreenState[]>([]);
-  const [inspectorAttached, setInspectorAttached] = React.useState(false);
+  const [inspectorPane, setInspectorPane] =
+    React.useState<InspectorPane | null>(null);
   const [showInspector, setShowInspector] = React.useState(false);
+  const [portraitOverlay, setPortraitOverlay] = React.useState(false);
   const [dismissals, setDismissals] = React.useState(0);
+  const [nativeDismissals, setNativeDismissals] = React.useState(0);
 
-  const selectDetail = () => {
+  const selectDetail = (animatesPush: boolean) => {
     const key = `detail-${nextId.current++}`;
-    setDetails(state => [...state, { key, activityMode: 'attached' }]);
+    setDetails(state => [
+      ...state,
+      { key, activityMode: 'attached', animatesPush },
+    ]);
   };
 
   const clearDetails = () => {
@@ -26,14 +43,24 @@ function TestSplitEmptyStackColumns() {
     );
   };
 
+  const removeDetail = (key: string) =>
+    setDetails(state => state.filter(item => item.key !== key));
+
   return (
     <View style={styles.container}>
       <View style={styles.controls}>
         <Text testID="empty-column-state">
           Details: {details.length}; dismissals: {dismissals}
         </Text>
+        <Text testID="empty-column-native-dismissals">
+          Native dismissals: {nativeDismissals}
+        </Text>
         <View style={styles.row}>
-          <Button title="Select detail" onPress={selectDetail} />
+          <Button title="Select detail" onPress={() => selectDetail(true)} />
+          <Button
+            title="Select detail in place"
+            onPress={() => selectDetail(false)}
+          />
           <Button
             title="Show detail"
             onPress={() => hostRef.current?.show('secondary')}
@@ -55,12 +82,24 @@ function TestSplitEmptyStackColumns() {
         </View>
         <View style={styles.row}>
           <Button
-            title={inspectorAttached ? 'Clear inspector' : 'Populate inspector'}
-            onPress={() => setInspectorAttached(value => !value)}
+            title={inspectorPane ? 'Clear inspector' : 'Populate inspector'}
+            onPress={() => setInspectorPane(pane => (pane ? null : 'files'))}
+          />
+          <Button
+            title="Switch inspector pane"
+            onPress={() =>
+              setInspectorPane(pane =>
+                pane === 'files' ? 'terminal' : 'files',
+              )
+            }
           />
           <Button
             title="Toggle inspector"
             onPress={() => setShowInspector(value => !value)}
+          />
+          <Button
+            title={portraitOverlay ? 'Tile in portrait' : 'Overlay in portrait'}
+            onPress={() => setPortraitOverlay(value => !value)}
           />
         </View>
       </View>
@@ -68,50 +107,70 @@ function TestSplitEmptyStackColumns() {
         ref={hostRef}
         preferredDisplayMode="oneBesideSecondary"
         preferredSplitBehavior="tile"
+        portraitPreferredDisplayMode={
+          portraitOverlay ? 'secondaryOnly' : undefined
+        }
+        portraitPreferredSplitBehavior={portraitOverlay ? 'overlay' : undefined}
         topColumnForCollapsing="primary"
         showInspector={showInspector}
         onInspectorHide={() => setShowInspector(false)}>
         <Split.Column>
-          <Split.Stack>
-            <Split.Screen screenKey="list" activityMode="attached">
-              <Split.HeaderConfig title="List" />
+          <Stack.Host>
+            <Stack.Screen screenKey="list" activityMode="attached">
+              <Stack.HeaderConfig title="List" />
               <View style={[styles.content, styles.list]}>
                 <Text testID="empty-column-list">List</Text>
                 <Text>Select a detail, then show its column.</Text>
               </View>
-            </Split.Screen>
-          </Split.Stack>
+            </Stack.Screen>
+          </Stack.Host>
         </Split.Column>
         <Split.Column>
-          <Split.Stack>
+          <Stack.Host>
             {details.map(screen => (
-              <Split.Screen
+              <Stack.Screen
                 key={screen.key}
                 screenKey={screen.key}
                 activityMode={screen.activityMode}
-                onDismiss={() => {
-                  setDetails(state =>
-                    state.filter(item => item.key !== screen.key),
-                  );
+                animatesPush={screen.animatesPush}
+                onDismiss={key => {
+                  removeDetail(key);
                   setDismissals(value => value + 1);
+                }}
+                onNativeDismiss={key => {
+                  removeDetail(key);
+                  setNativeDismissals(value => value + 1);
                 }}>
-                <Split.HeaderConfig title={screen.key} />
+                <Stack.HeaderConfig title={screen.key} />
                 <View style={[styles.content, styles.detail]}>
                   <Text testID={`empty-column-${screen.key}`}>
                     {screen.key}
                   </Text>
                 </View>
-              </Split.Screen>
+              </Stack.Screen>
             ))}
-          </Split.Stack>
+          </Stack.Host>
         </Split.Column>
-        <Split.Inspector
-          screenKey="inspector"
-          activityMode={inspectorAttached ? 'attached' : 'detached'}>
-          <Split.HeaderConfig title="Inspector" />
-          <View style={[styles.content, styles.inspector]}>
-            <Text testID="empty-column-inspector">Inspector</Text>
-          </View>
+        <Split.Inspector>
+          <Stack.Host>
+            {INSPECTOR_PANES.map(pane => (
+              <Stack.Screen
+                key={pane}
+                screenKey={`inspector-${pane}`}
+                activityMode={inspectorPane === pane ? 'attached' : 'detached'}>
+                <Stack.HeaderConfig title={`Inspector ${pane}`} />
+                <View style={[styles.content, styles.inspector]}>
+                  <Text testID={`empty-column-inspector-${pane}`}>
+                    Inspector {pane}
+                  </Text>
+                  <Button
+                    title="Close inspector"
+                    onPress={() => setShowInspector(false)}
+                  />
+                </View>
+              </Stack.Screen>
+            ))}
+          </Stack.Host>
         </Split.Inspector>
       </Split.Host>
     </View>

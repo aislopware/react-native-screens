@@ -1,23 +1,22 @@
 #import "RNSSplitScreenComponentView.h"
 #import <React/RCTAssert.h>
-#import <React/RCTConversions.h>
 #import <React/RCTSurfaceTouchHandler.h>
 #import <react/renderer/components/rnscreens/RNSSplitScreenComponentDescriptor.h>
-#import "RNSConversions.h"
+#import "RNSAssert.h"
 #import "RNSConversions-SplitView.h"
-#import "RNSHeaderConfigComponentView.h"
-#import "RNSHeaderCoordinator.h"
 #import "RNSNavigationItemCustomizing.h" // legacy-compat: configures the header of a column with the legacy stack
 #import "RNSSafeAreaViewNotifications.h"
-#import "RNSScrollViewSeeking.h"
 #import "RNSSplitHostComponentView.h"
+#import "RNSSplitHostController.h"
 #import "RNSSplitScreenComponentEventEmitter.h"
 #import "RNSSplitScreenController.h"
 #import "RNSSplitScreenShadowStateProxy.h"
+#import "RNSStackHostComponentView.h"
+#import "RNSStackNavigationController.h"
 
 namespace react = facebook::react;
 
-@interface RNSSplitScreenComponentView () <RNSScrollViewSeeking, RNSSplitScreenControllerDelegate>
+@interface RNSSplitScreenComponentView () <RNSSplitScreenControllerDelegate>
 @end
 
 @implementation RNSSplitScreenComponentView {
@@ -26,8 +25,7 @@ namespace react = facebook::react;
   RNSSplitScreenShadowStateProxy *_Nonnull _shadowStateProxy;
   RCTSurfaceTouchHandler *_Nullable _touchHandler;
   NSMutableSet<UIView *> *_viewsForFrameCorrection;
-  BOOL _hasUpdatedActivityMode;
-  BOOL _isInvalidated;
+  __weak RNSStackHostComponentView *_Nullable _stackHost;
 }
 
 - (RNSSplitScreenController *)controller
@@ -57,41 +55,54 @@ namespace react = facebook::react;
   _shadowStateProxy = [RNSSplitScreenShadowStateProxy new];
 
   _viewsForFrameCorrection = [NSMutableSet set];
-  _hasUpdatedActivityMode = NO;
 }
 
 - (void)setupController
 {
-  _controller = [[RNSSplitScreenController alloc] initWithScreenView:self];
+  _controller = [RNSSplitScreenController new];
   _controller.view = self;
   _controller.delegate = self;
 }
 
 - (void)didMoveToWindow
 {
-  // Starting from iOS 26, a new column type called 'inspector' was introduced.
-  // This column can be displayed as a modal, independent of the React Native view hierarchy.
-  // In contrast, prior to iOS 26, all SplitView columns were placed under RCTSurface,
-  // meaning that touches were handler by RN handlers.
+  [self updateTouchHandler];
+}
+
+/**
+ * Starting from iOS 26, a new column type called 'inspector' was introduced.
+ * This column can be displayed as a modal, independent of the React Native view hierarchy.
+ * In contrast, prior to iOS 26, all SplitView columns were placed under RCTSurface,
+ * meaning that touches were handler by RN handlers.
+ *
+ * The handler goes on the view the column shows: the column itself, or the view of the stack's navigation controller
+ * when a stack navigates the column, as neither the column nor the host of the stack is in the view hierarchy then.
+ */
+- (void)updateTouchHandler
+{
   if (@available(iOS 26.0, *)) {
-    // If the current controller’s splitViewController is of type RNSSplitHostController,
+    UIViewController *contentController = _stackHost != nil ? _stackHost.stackNavigationController : _controller;
+    UIView *contentView = _stackHost != nil ? contentController.viewIfLoaded : self;
+
+    // If the splitViewController of the content is of type RNSSplitHostController,
     // we know that we're still inside the RN hierarchy,
     // so there's no need to enforce additional touch event support.
-    if ([_controller isInSplitHostSubtree]) {
-      return;
-    }
+    BOOL isInSplitHostSubtree = [contentController.splitViewController isKindOfClass:RNSSplitHostController.class];
+    UIView *handledView = contentView.window != nil && !isInSplitHostSubtree ? contentView : nil;
 
     // Like a presented screen, an inspector can move between windows without passing through
     // nil, and the handler asserts on attaching twice or detaching from a view it is not on.
-    if (self.window != nil) {
+    if (_touchHandler.view == handledView) {
+      return;
+    }
+    if (_touchHandler.view != nil) {
+      [_touchHandler detachFromView:_touchHandler.view];
+    }
+    if (handledView != nil) {
       if (_touchHandler == nil) {
         _touchHandler = [RCTSurfaceTouchHandler new];
       }
-      if (_touchHandler.view == nil) {
-        [_touchHandler attachToView:self];
-      }
-    } else if (_touchHandler.view == self) {
-      [_touchHandler detachFromView:self];
+      [_touchHandler attachToView:handledView];
     }
   }
 }
@@ -102,10 +113,6 @@ namespace react = facebook::react;
   _props = defaultProps;
 
   _columnType = RNSSplitScreenColumnTypeColumn;
-  _column = -1;
-  _activityMode = RNSStackScreenActivityModeAttached;
-  _screenKey = nil;
-  _animatesPush = YES;
 }
 
 - (void)registerForFrameCorrection:(UIView *)view
@@ -116,6 +123,39 @@ namespace react = facebook::react;
 - (void)unregisterFromFrameCorrection:(UIView *)view
 {
   [_viewsForFrameCorrection removeObject:view];
+}
+
+#pragma mark - Stack host
+
+- (BOOL)isStackHostOfColumn:(UIView<RCTComponentViewProtocol> *)childComponentView
+{
+  // The stack host is an only child of the column.
+  BOOL hasOtherChildren = _stackHost != nil || self.subviews.count > 0;
+  if (hasOtherChildren || ![childComponentView isKindOfClass:RNSStackHostComponentView.class]) {
+    return NO;
+  }
+  return static_cast<RNSStackHostComponentView *>(childComponentView).headlessModeEnabled;
+}
+
+- (void)setStackHost:(nullable RNSStackHostComponentView *)stackHost
+{
+  _stackHost.stackNavigationController.viewLifecycleEventsObserver = nil;
+  _stackHost = stackHost;
+  _stackHost.stackNavigationController.viewLifecycleEventsObserver = _controller;
+
+  // The column provides another navigation controller now. The one its controller created is not used anymore, and
+  // the Split has to install the one that takes its place.
+  [_controller releasePlainColumnNavigationController];
+  [_splitHost.splitHostController setNeedsUpdateOfChildViewControllers];
+  [self updateTouchHandler];
+}
+
+- (RNSStackNavigationController *)columnNavigationController
+{
+  if (_stackHost != nil) {
+    return _stackHost.stackNavigationController;
+  }
+  return _controller.plainColumnNavigationController;
 }
 
 #pragma mark - Layout
@@ -146,6 +186,7 @@ namespace react = facebook::react;
 
 - (void)splitScreenControllerDidAppear:(RNSSplitScreenController *)controller
 {
+  [self updateTouchHandler];
   [_reactEventEmitter emitOnDidAppear];
 }
 
@@ -156,30 +197,8 @@ namespace react = facebook::react;
 
 - (void)splitScreenControllerDidDisappear:(RNSSplitScreenController *)controller
 {
+  [self updateTouchHandler];
   [_reactEventEmitter emitOnDidDisappear];
-}
-
-- (void)splitScreenController:(RNSSplitScreenController *)controller didDismissNatively:(BOOL)isNativeDismiss
-{
-  [_reactEventEmitter emitOnDismissWithNativeDismiss:isNativeDismiss];
-  if (_isInvalidated) {
-    _controller = nil;
-  }
-}
-
-#pragma mark - RNSScrollViewSeeking
-
-- (void)registerDescendantScrollView:(UIScrollView *)scrollView
-{
-  // UIKit observes this scroll view for scroll-edge appearance and header minimization.
-  [_controller setContentScrollView:scrollView forEdge:NSDirectionalRectEdgeAll];
-}
-
-#pragma mark - RNSStackScreenProviding
-
-- (nullable RNSHeaderCoordinator *)headerCoordinator
-{
-  return _controller.headerCoordinator;
 }
 
 #pragma mark - RNSSafeAreaProviding
@@ -220,14 +239,13 @@ namespace react = facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  if ([childComponentView isKindOfClass:RNSHeaderConfigComponentView.class]) {
-    _headerConfig = (RNSHeaderConfigComponentView *)childComponentView;
-    _headerConfig.headerCoordinator = _controller.headerCoordinator;
-    _controller.headerCoordinator.configDataProvider = _headerConfig;
-    _controller.headerCoordinator.frameChangeDelegate = _headerConfig;
-    _controller.headerCoordinator.eventsDelegate = _headerConfig;
-    _controller.headerCoordinator.imageLoader = _headerConfig.imageLoader;
+  if ([self isStackHostOfColumn:childComponentView]) {
+    [self setStackHost:static_cast<RNSStackHostComponentView *>(childComponentView)];
+    return;
   }
+
+  RNSAssert(_stackHost == nil, @"[RNScreens] Stack.Host that navigates a Split.Column has to be its only child");
+
   [super mountChildComponentView:childComponentView index:index];
 
   if ([childComponentView conformsToProtocol:@protocol(RNSNavigationItemCustomizing)]) {
@@ -237,11 +255,11 @@ namespace react = facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  if ([childComponentView isKindOfClass:RNSHeaderConfigComponentView.class]) {
-    [_controller.headerCoordinator clearHeaderConfiguration];
-    _headerConfig.headerCoordinator = nil;
-    _headerConfig = nil;
+  if (childComponentView == _stackHost) {
+    [self setStackHost:nil];
+    return;
   }
+
   [super unmountChildComponentView:childComponentView index:index];
 }
 
@@ -262,35 +280,7 @@ namespace react = facebook::react;
     _columnType = rnscreens::conversion::RNSSplitScreenColumnTypeFromScreenProp(newComponentProps.columnType);
   }
 
-  if (oldComponentProps.column != newComponentProps.column) {
-    _column = newComponentProps.column;
-  }
-
-  if (oldComponentProps.screenKey != newComponentProps.screenKey) {
-    _screenKey = RCTNSStringFromStringNilIfEmpty(newComponentProps.screenKey);
-  }
-
-  if (oldComponentProps.animatesPush != newComponentProps.animatesPush) {
-    _animatesPush = newComponentProps.animatesPush;
-  }
-
-  if (oldComponentProps.activityMode != newComponentProps.activityMode) {
-    _activityMode =
-        rnscreens::conversion::RNSStackScreenActivityModeFromSplitScreenProp(newComponentProps.activityMode);
-    _hasUpdatedActivityMode = YES;
-  }
-
   [super updateProps:props oldProps:oldProps];
-}
-
-- (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask
-{
-  if (_hasUpdatedActivityMode) {
-    _hasUpdatedActivityMode = NO;
-    [self.splitHost splitScreenDidChangeActivityMode:self];
-  }
-
-  [super finalizeUpdates:updateMask];
 }
 
 - (void)updateEventEmitter:(const facebook::react::EventEmitter::Shared &)eventEmitter
@@ -302,16 +292,11 @@ namespace react = facebook::react;
 
 - (void)invalidate
 {
-  // Keep the controller available until a pending pop completes, including after a split transition.
-  // A controller that never attached can release its component reference after this transaction.
-  _isInvalidated = YES;
-  __weak auto weakSelf = self;
-  dispatch_async(dispatch_get_main_queue(), ^{
-    auto strongSelf = weakSelf;
-    if (strongSelf && strongSelf->_controller.parentViewController == nil) {
-      strongSelf->_controller = nil;
-    }
-  });
+  // Controller keeps the strong reference to the component via the `.view` property.
+  // Therefore, we need to enforce a proper cleanup, breaking the retain cycle,
+  // when we want to destroy the component.
+  [_controller releasePlainColumnNavigationController];
+  _controller = nil;
 }
 
 #pragma mark - Dynamic frameworks support

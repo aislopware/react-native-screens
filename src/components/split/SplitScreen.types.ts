@@ -17,11 +17,6 @@ export interface SplitColumnProps extends ViewProps {
    * Keeps the column a plain one even when its content is a `Stack.Host`.
    *
    * @remarks
-   * Onicode's fork navigates a column with {@link Split.Stack} and does not
-   * integrate a `Stack.Host` with a column, so every column behaves as if this
-   * prop was set and the prop has no effect. The rest of this description is
-   * upstream's.
-   *
    * By default a `Stack.Host` rendered as a direct child of the column is
    * integrated with the column. The stack navigates the column, and the header
    * of the stack is the navigation bar of the column. The host has to be the
@@ -93,6 +88,24 @@ export interface SplitInspectorProps extends ViewProps {
    */
   children?: React.ReactNode | undefined;
   /**
+   * Keeps the inspector a plain column even when its content is a
+   * `Stack.Host`.
+   *
+   * @remarks
+   * Works like
+   * {@link SplitColumnProps.disableStackIntegration | disableStackIntegration}
+   * of `Split.Column`: by default a `Stack.Host` rendered as the direct and
+   * only child of the inspector navigates the inspector column.
+   *
+   * The value is read when the inspector is mounted. Changing it later has no
+   * effect.
+   *
+   * @defaultValue `false`
+   *
+   * @platform ios >= 26
+   */
+  disableStackIntegration?: boolean | undefined;
+  /**
    * A callback that gets invoked when the current `Split.Inspector` did appear.
    *
    * @remarks
@@ -131,62 +144,4 @@ export interface SplitInspectorProps extends ViewProps {
    * @platform ios >= 26
    */
   onWillDisappear?: NativeEventHandler<EmptyEventPayload> | undefined;
-}
-
-/**
- * Whether a screen is expected to be on the navigation stack of its column.
- */
-export type SplitScreenActivityMode = 'detached' | 'attached';
-
-/**
- * Payload of {@link SplitScreenProps.onDismiss}.
- */
-export type SplitScreenDismissEvent = Readonly<{
-  isNativeDismiss: boolean;
-}>;
-
-/**
- * Props for {@link Split.Stack}.
- *
- * @experimental
- */
-export interface SplitStackProps {
-  children?: React.ReactNode | undefined;
-}
-
-/**
- * Props for {@link Split.Screen}, a screen in the navigation stack of a
- * column. {@link Split.Column} and {@link Split.Inspector} accept them too.
- *
- * @experimental
- */
-export interface SplitScreenProps extends SplitColumnProps {
-  /**
-   * Whether the screen is expected to be on the stack of its column.
-   *
-   * @defaultValue `'attached'`
-   * @platform ios
-   */
-  activityMode?: SplitScreenActivityMode | undefined;
-  /**
-   * Identifier of the screen, used for debugging only.
-   *
-   * @platform ios
-   */
-  screenKey?: string | undefined;
-  /**
-   * Whether UIKit animates pushing the screen onto its column's stack.
-   * Defaults to `true`.
-   *
-   * @platform ios
-   */
-  animatesPush?: boolean | undefined;
-  /**
-   * A callback that gets invoked when the screen left the stack of its column,
-   * either after it was detached or after a native dismissal (e.g. the back
-   * button).
-   *
-   * @platform ios
-   */
-  onDismiss?: NativeEventHandler<SplitScreenDismissEvent> | undefined;
 }

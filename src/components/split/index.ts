@@ -1,6 +1,5 @@
 import SplitHost from './SplitHost';
 import SplitScreen from './SplitScreen';
-import SplitHeaderConfig from './SplitHeaderConfig';
 
 export type {
   DisplayModeWillChangeEvent, // TODO: This event should be renamed to match the convention
@@ -21,16 +20,7 @@ export type {
 export type {
   SplitColumnProps,
   SplitInspectorProps,
-  SplitScreenActivityMode,
-  SplitScreenDismissEvent,
-  SplitScreenProps,
-  SplitStackProps,
 } from './SplitScreen.types';
-
-export type {
-  SplitHeaderConfigProps,
-  SplitHeaderConfigRef,
-} from './SplitHeaderConfig.types';
 
 /**
  * Native split view that shows its content in side-by-side columns.
@@ -60,30 +50,24 @@ export const Split = {
    * A column of {@link Split.Host}.
    *
    * @remarks
-   * A column is navigated with a {@link Split.Stack} of {@link Split.Screen}
-   * children. Upstream's integration of a `Stack.Host` with a column is not
-   * part of Onicode's fork: a `Stack.Host` rendered in a column is nested like
-   * any other content.
+   * A `Stack.Host` rendered as a direct child of the column is integrated with
+   * the column. The stack navigates the column, and the header of the stack is
+   * the navigation bar of the column. The host has to be the only child of the
+   * column then.
+   *
+   * The integration does not work when there is a view between the column and
+   * the host. Such a column has to opt out with
+   * {@link SplitColumnProps.disableStackIntegration | disableStackIntegration}.
+   * A stack rendered inside `Tabs`, a sheet or a contained modal is never
+   * integrated, so the column does not have to opt out for it.
+   *
+   * An integrated column and its host take no part in layout, so their
+   * `onLayout` and `measure` report an empty frame.
    *
    * @platform ios
    * @experimental
    */
   Column: SplitScreen.Column,
-  /**
-   * The navigation stack of a {@link Split.Column}, made of
-   * {@link Split.Screen} children.
-   *
-   * @platform ios
-   * @experimental
-   */
-  Stack: SplitScreen.Stack,
-  /**
-   * A screen in the {@link Split.Stack} of a column.
-   *
-   * @platform ios
-   * @experimental
-   */
-  Screen: SplitScreen.Screen,
   /**
    * The inspector column of {@link Split.Host}, which shows additional data
    * about the secondary column.
@@ -92,9 +76,12 @@ export const Split = {
    * It is shown and hidden with
    * {@link SplitHostProps.showInspector | showInspector}.
    *
+   * Like {@link Split.Column}, it is integrated with a `Stack.Host` rendered
+   * as its direct and only child, unless it opts out with
+   * {@link SplitInspectorProps.disableStackIntegration | disableStackIntegration}.
+   *
    * @platform ios >= 26
    * @experimental
    */
   Inspector: SplitScreen.Inspector,
-  HeaderConfig: SplitHeaderConfig,
 };
