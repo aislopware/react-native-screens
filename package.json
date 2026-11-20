@@ -1,6 +1,6 @@
 {
   "name": "react-native-screens",
-  "version": "5.0.0-oni.55",
+  "version": "5.0.0-oni.56",
   "description": "Native navigation primitives for your React Native app.",
   "scripts": {
     "submodules": "git submodule update --init --recursive && (cd react-navigation && yarn && yarn build && cd ../)",
@@ -260,6 +260,6 @@
   },
   "packageManager": "yarn@4.1.1",
   "oniFork": {
-    "upstreamCommit": "a1f25d01fda5d1203a65704c960c4facb6d5b372"
+    "upstreamCommit": "8919ab59957059adeafd76b43567ab547c8b8223"
   }
 }
