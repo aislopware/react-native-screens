@@ -1,5 +1,5 @@
 import React from 'react';
-import StackHeaderItemSpacerIOSNativeComponent from '../../../../fabric/header/HeaderItemSpacerIOSNativeComponent';
+import StackHeaderItemSpacerIOSNativeComponent from '../../../../fabric/stack/StackHeaderItemSpacerIOSNativeComponent';
 import type { StackHeaderItemSpacerProps } from './StackHeaderItemSpacer.ios.types';
 import { StyleSheet } from 'react-native';
 

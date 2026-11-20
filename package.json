@@ -207,14 +207,14 @@
         "RNSStackHost": {
           "className": "RNSStackHostComponentView"
         },
-        "RNSHeaderConfigIOS": {
-          "className": "RNSHeaderConfigComponentView"
+        "RNSStackHeaderConfigIOS": {
+          "className": "RNSStackHeaderConfigComponentView"
         },
-        "RNSHeaderItemIOS": {
-          "className": "RNSHeaderItemComponentView"
+        "RNSStackHeaderItemIOS": {
+          "className": "RNSStackHeaderItemComponentView"
         },
-        "RNSHeaderItemSpacerIOS": {
-          "className": "RNSHeaderItemSpacerComponentView"
+        "RNSStackHeaderItemSpacerIOS": {
+          "className": "RNSStackHeaderItemSpacerComponentView"
         },
         "RNSTabsScreenIOS": {
           "className": "RNSTabsScreenComponentView"

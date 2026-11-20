@@ -1,8 +1,8 @@
 #import "RNSStackScreenController.h"
 #import "RNSContainer.h"
 #import "RNSContainerItemSupport.h"
-#import "RNSHeaderCoordinator.h"
 #import "RNSLog.h"
+#import "RNSStackScreenHeaderCoordinator.h"
 
 @implementation RNSStackScreenController {
   RNSContainerItemSupport *_Nonnull _containerItemSupport;
@@ -11,7 +11,7 @@
 - (instancetype)init
 {
   if (self = [super init]) {
-    _headerCoordinator = [[RNSHeaderCoordinator alloc] initWithScreenController:self];
+    _headerCoordinator = [[RNSStackScreenHeaderCoordinator alloc] initWithScreenController:self];
     _containerItemSupport = [RNSContainerItemSupport new];
   }
   return self;

@@ -1,11 +1,11 @@
 #import "RNSSheetContentController.h"
 #import "RNSPresentationSourceProvider.h"
-#import "RNSDefines.h"
 #import "RNSSheetConfigurationApplicator.h"
 #import "RNSSheetContentView.h"
 #import "RNSSheetPresentationManager.h"
 #import "RNSSheetUpdateCoordinator.h"
 #import "RNSSheetUpdateFlags.h"
+#import "RNSDefines.h"
 
 #import "RNSAssert.h"
 

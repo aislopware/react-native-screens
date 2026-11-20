@@ -1,7 +1,7 @@
-#import <UIKit/UIKit.h>
+#import <atomic>
 #import <dlfcn.h>
 #import <objc/runtime.h>
-#import <atomic>
+#import <UIKit/UIKit.h>
 
 #import "RNSDefines.h"
 #import "RNSSearchBar.h"

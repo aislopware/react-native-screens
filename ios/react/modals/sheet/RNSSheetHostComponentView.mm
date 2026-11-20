@@ -1,5 +1,4 @@
 #import "RNSSheetHostComponentView.h"
-#import "RNSDefines.h"
 #import "RNSSheetContentController.h"
 #import "RNSSheetContentView.h"
 #import "RNSSheetContentWrapperComponentView.h"
@@ -8,6 +7,7 @@
 #import "RNSSheetHostEventEmitter.h"
 #import "RNSSheetHostShadowStateProxy.h"
 #import "RNSSheetProviders.h"
+#import "RNSDefines.h"
 
 #import "RNSConversions-Sheet.h"
 #import "RNSDefines.h"

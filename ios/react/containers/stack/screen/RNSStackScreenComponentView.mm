@@ -8,23 +8,22 @@
 #import <react/renderer/components/rnscreens/RNSStackScreenComponentDescriptor.h>
 
 #import "RNSConversions-Stack.h"
-#import "RNSHeaderConfigComponentView.h"
-#import "RNSHeaderCoordinator.h"
 #import "RNSSafeAreaViewNotifications.h"
 #import "RNSScrollViewSeeking.h"
+#import "RNSStackHeaderConfigComponentView.h"
 #import "RNSStackHostComponentView.h"
 #import "RNSStackNavigationController.h"
 #import "RNSStackScreenComponentEventEmitter.h"
 #import "RNSStackScreenController.h"
+#import "RNSStackScreenHeaderCoordinator.h"
 #import "RNSStackScreenShadowStateProxy.h"
 
 namespace react = facebook::react;
 
-@interface RNSStackScreenComponentView () <
-    RCTMountingTransactionObserving,
-    RNSScrollViewSeeking,
-    RNSStackScreenControllerDelegate,
-    RNSStackContainerItemConfigProviding>
+@interface RNSStackScreenComponentView () <RCTMountingTransactionObserving,
+                                           RNSScrollViewSeeking,
+                                           RNSStackScreenControllerDelegate,
+                                           RNSStackContainerItemConfigProviding>
 @end
 
 #pragma mark - View implementation
@@ -41,6 +40,7 @@ namespace react = facebook::react;
 
   // Flags
   BOOL _hasUpdatedActivityMode;
+  BOOL _preventNativeDismiss;
   BOOL _reportsFrameToShadowTree;
 }
 
@@ -142,16 +142,15 @@ namespace react = facebook::react;
   _contentScrollView = scrollView;
 }
 
+- (BOOL)preventsNativeDismiss
+{
+  // A screen React has already detached is on its way out; only an attached one can refuse.
+  return _preventNativeDismiss && _activityMode == RNSStackScreenActivityModeAttached;
+}
+
 - (nullable UIScrollView *)cachedContentScrollView
 {
   return _contentScrollView;
-}
-
-#pragma mark - RNSStackScreenProviding
-
-- (nullable RNSHeaderCoordinator *)headerCoordinator
-{
-  return _controller.headerCoordinator;
 }
 
 #pragma mark - Events
@@ -182,6 +181,11 @@ namespace react = facebook::react;
 - (void)viewControllerViewDidDisappear:(RNSStackScreenController *)controller
 {
   [self.reactEventEmitter emitOnDidDisappear];
+}
+
+- (void)stackScreenControllerDidPreventNativeDismiss:(RNSStackScreenController *)controller
+{
+  [self.reactEventEmitter emitOnNativeDismissPrevented];
 }
 
 - (void)stackScreenControllerDidLeaveStack:(RNSStackScreenController *)controller
@@ -254,8 +258,8 @@ namespace react = facebook::react;
 
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  if ([childComponentView isKindOfClass:RNSHeaderConfigComponentView.class]) {
-    _headerConfig = (RNSHeaderConfigComponentView *)childComponentView;
+  if ([childComponentView isKindOfClass:RNSStackHeaderConfigComponentView.class]) {
+    _headerConfig = (RNSStackHeaderConfigComponentView *)childComponentView;
     _headerConfig.headerCoordinator = _controller.headerCoordinator;
     _controller.headerCoordinator.configDataProvider = _headerConfig;
     _controller.headerCoordinator.frameChangeDelegate = _headerConfig;
@@ -267,7 +271,7 @@ namespace react = facebook::react;
 
 - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
-  if ([childComponentView isKindOfClass:RNSHeaderConfigComponentView.class]) {
+  if ([childComponentView isKindOfClass:RNSStackHeaderConfigComponentView.class]) {
     [_controller.headerCoordinator clearHeaderConfiguration];
     _headerConfig.headerCoordinator = nil;
     _headerConfig = nil;

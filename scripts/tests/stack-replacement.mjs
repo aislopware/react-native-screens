@@ -5,25 +5,21 @@ import { join } from 'node:path';
 
 // Compile the production update method against a recording navigation controller.
 // This verifies that one React replacement never starts competing UIKit transitions.
-const source = readFileSync(new URL('../../ios/helpers/stack/RNSStackNavigationController.mm', import.meta.url), 'utf8');
-const method = source.slice(source.indexOf('- (void)performContainerUpdateIfNeeded'), source.indexOf('#pragma mark - Debug'));
+const source = readFileSync(new URL('../../ios/core/containers/stack/container/RNSStackNavigationController.mm', import.meta.url), 'utf8');
+const method = source.slice(source.indexOf('- (void)commitTransaction'), source.indexOf('#pragma mark - Debug'));
 const directory = mkdtempSync(join(tmpdir(), 'rns-stack-replacement-'));
 try {
   writeFileSync(join(directory, 'test.mm'), `
 #import <Foundation/Foundation.h>
 @compatibility_alias UIViewController NSObject;
-#define RCTAssert(condition, message) NSCAssert(condition, message)
-@interface Screen : NSObject
-@property NSObject *controller;
-@end
-@implementation Screen
-@end
+#define RNSAssert(condition, message) NSCAssert(condition, message)
 @interface RNSPopOperation : NSObject
-@property Screen *stackScreen;
+@property NSObject *screenController;
 @end
 @implementation RNSPopOperation
 @end
 @interface RNSPushOperation : RNSPopOperation
+@property BOOL animated;
 @end
 @implementation RNSPushOperation
 @end
@@ -37,7 +33,7 @@ try {
 @property NSMutableArray *viewControllers;
 @property NSMutableArray *transitions;
 @property BOOL allowsEmptyStack;
-- (void)performContainerUpdateIfNeeded;
+- (void)commitTransaction;
 @end
 @implementation Navigation
 - (BOOL)hasPendingOperations { return _pendingPushOperations.count || _pendingPopOperations.count; }
@@ -59,7 +55,6 @@ try {
 }
 ${method}
 @end
-static Screen *screen(NSString *name) { Screen *s = [Screen new]; s.controller = name; return s; }
 static Navigation *navigation(NSArray *controllers, BOOL empty) {
   Navigation *n = [Navigation new]; n.viewControllers = [controllers mutableCopy];
   n.transitions = [NSMutableArray new]; n.allowsEmptyStack = empty;
@@ -67,26 +62,26 @@ static Navigation *navigation(NSArray *controllers, BOOL empty) {
   n->_emptyStackController = @"empty"; return n;
 }
 static void pop(Navigation *n, NSString *name) {
-  RNSPopOperation *op = [RNSPopOperation new]; op.stackScreen = screen(name); [n->_pendingPopOperations addObject:op];
+  RNSPopOperation *op = [RNSPopOperation new]; op.screenController = name; [n->_pendingPopOperations addObject:op];
 }
 static void push(Navigation *n, NSString *name) {
-  RNSPushOperation *op = [RNSPushOperation new]; op.stackScreen = screen(name); [n->_pendingPushOperations addObject:op];
+  RNSPushOperation *op = [RNSPushOperation new]; op.screenController = name; op.animated = YES; [n->_pendingPushOperations addObject:op];
 }
 int main() { @autoreleasepool {
   Navigation *n = navigation(@[@"home", @"pr", @"chooser", @"local"], NO);
   pop(n, @"local"); pop(n, @"chooser"); pop(n, @"pr"); push(n, @"draft");
-  [n performContainerUpdateIfNeeded];
+  [n commitTransaction];
   NSCAssert(([n.viewControllers isEqual:@[@"home", @"draft"]]), @"replacement destination");
   NSCAssert([n.transitions isEqual:@[@"set"]], @"replacement must have one atomic transition, got %@", n.transitions);
   NSCAssert(!n.hasPendingOperations, @"replacement must drain operations");
   n = navigation(@[@"pr", @"chooser", @"local"], YES);
   pop(n, @"local"); pop(n, @"chooser"); pop(n, @"pr"); push(n, @"draft");
-  [n performContainerUpdateIfNeeded];
+  [n commitTransaction];
   NSCAssert([n.viewControllers isEqual:@[@"draft"]], @"empty column replacement destination");
   NSCAssert([n.transitions isEqual:@[@"set"]], @"empty column replacement transition");
-  n = navigation(@[@"home", @"draft", @"chooser"], NO); pop(n, @"chooser"); [n performContainerUpdateIfNeeded];
+  n = navigation(@[@"home", @"draft", @"chooser"], NO); pop(n, @"chooser"); [n commitTransaction];
   NSCAssert(([n.viewControllers isEqual:@[@"home", @"draft"]] && [n.transitions isEqual:@[@"pop"]]), @"ordinary back unchanged");
-  n = navigation(@[@"home"], NO); push(n, @"draft"); [n performContainerUpdateIfNeeded];
+  n = navigation(@[@"home"], NO); push(n, @"draft"); [n commitTransaction];
   NSCAssert(([n.viewControllers isEqual:@[@"home", @"draft"]] && [n.transitions isEqual:@[@"push"]]), @"ordinary push unchanged");
   puts("4 stack update scenarios passed");
 } }

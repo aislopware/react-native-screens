@@ -1,0 +1,66 @@
+#pragma once
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+@class RNSStackHeaderIconData;
+
+NS_ASSUME_NONNULL_BEGIN
+
+typedef NS_ENUM(NSInteger, RNSMenuItemType) {
+  RNSMenuItemTypeAutomatic = 0,
+  RNSMenuItemTypeAction,
+  RNSMenuItemTypeToggle,
+};
+
+@protocol RNSStackHeaderMenuElement <NSObject>
+
+@property (nonatomic, copy, readonly) NSString *menuElementId;
+
+@end
+
+@interface RNSStackHeaderMenuItemData : NSObject <RNSStackHeaderMenuElement>
+
+@property (nonatomic, copy, readonly, nullable) NSString *title;
+@property (nonatomic, copy, readonly, nullable) NSString *subtitle;
+@property (nonatomic, readonly) BOOL disabled;
+@property (nonatomic, readonly) BOOL destructive;
+@property (nonatomic, readonly) RNSMenuItemType itemType;
+@property (nonatomic, readonly) UIMenuElementState state;
+@property (nonatomic, readonly) BOOL initialToggleState;
+@property (nonatomic, readonly) BOOL keepsMenuPresented;
+@property (nonatomic, strong, readonly, nullable) RNSStackHeaderIconData *icon;
+
+- (instancetype)initWithId:(NSString *)menuElementId
+                     title:(nullable NSString *)title
+                  subtitle:(nullable NSString *)subtitle
+                  disabled:(BOOL)disabled
+               destructive:(BOOL)destructive
+                  itemType:(RNSMenuItemType)itemType
+                     state:(UIMenuElementState)state
+        initialToggleState:(BOOL)initialToggleState
+        keepsMenuPresented:(BOOL)keepsMenuPresented
+                      icon:(nullable RNSStackHeaderIconData *)icon;
+
+@end
+
+@interface RNSStackHeaderMenuData : NSObject <RNSStackHeaderMenuElement>
+
+@property (nonatomic, copy, readonly, nullable) NSString *title;
+@property (nonatomic, readonly) BOOL singleSelection;
+@property (nonatomic, readonly) BOOL displayInline;
+@property (nonatomic, readonly) BOOL displayAsPalette;
+@property (nonatomic, copy, readonly) NSArray<id<RNSStackHeaderMenuElement>> *children;
+@property (nonatomic, strong, readonly, nullable) RNSStackHeaderIconData *icon;
+
+- (instancetype)initWithId:(NSString *)menuElementId
+                     title:(nullable NSString *)title
+           singleSelection:(BOOL)singleSelection
+             displayInline:(BOOL)displayInline
+          displayAsPalette:(BOOL)displayAsPalette
+                  children:(NSArray<id<RNSStackHeaderMenuElement>> *)children
+                      icon:(nullable RNSStackHeaderIconData *)icon;
+
+@end
+
+NS_ASSUME_NONNULL_END

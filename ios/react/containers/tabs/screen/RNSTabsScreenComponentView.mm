@@ -393,9 +393,8 @@ RNS_IGNORE_SUPER_CALL_END
     // Only the UITab-managed path fixes the tab class (`UISearchTab` vs `UITab`)
     // at creation; outside of it the prop has no effect.
     if (RNS_UITAB_API_ENABLED) {
-      RCTAssert(
-          _controller.tabBarController == nil,
-          @"[RNScreens] Changing `role` on a mounted tab screen is not supported.");
+      RCTAssert(_controller.tabBarController == nil,
+                @"[RNScreens] Changing `role` on a mounted tab screen is not supported.");
     }
 #endif // RNS_UITAB_API_SDK_AVAILABLE
     _tabRole = rnscreens::conversion::RNSTabsScreenTabRoleFromReactRNSTabsScreenTabRole(newComponentProps.tabRole);

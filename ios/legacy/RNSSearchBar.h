@@ -11,6 +11,7 @@
 
 #import "RNSDefines.h"
 #import "RNSLegacyEnums.h"
+#import "RNSStackHeaderSearchBarProviding.h"
 
 @class RNSSearchBar;
 
@@ -22,9 +23,9 @@
 
 @interface RNSSearchBar :
 #if defined(__cplusplus)
-    RCTViewComponentView <UISearchBarDelegate, RCTRNSSearchBarViewProtocol>
+    RCTViewComponentView <UISearchBarDelegate, RCTRNSSearchBarViewProtocol, RNSStackHeaderSearchBarProviding>
 #else
-    UIView <UISearchBarDelegate>
+    UIView <UISearchBarDelegate, RNSStackHeaderSearchBarProviding>
 #endif
 
 @property (nonatomic, weak, nullable) id<RNSSearchBarNavigationItemDelegate> navigationItemDelegate;

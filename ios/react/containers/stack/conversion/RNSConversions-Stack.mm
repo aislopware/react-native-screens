@@ -6,53 +6,54 @@ namespace rnscreens::conversion {
 namespace react = facebook::react;
 
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(16_0) && !TARGET_OS_TV
-UINavigationItemStyle UINavigationItemStyleFromReactRNSHeaderConfigIOSNavigationItemStyle(
-    react::RNSHeaderConfigIOSNavigationItemStyle style)
+UINavigationItemStyle UINavigationItemStyleFromReactRNSStackHeaderConfigIOSNavigationItemStyle(
+    react::RNSStackHeaderConfigIOSNavigationItemStyle style)
 {
   switch (style) {
-    case react::RNSHeaderConfigIOSNavigationItemStyle::Navigator:
+    case react::RNSStackHeaderConfigIOSNavigationItemStyle::Navigator:
       return UINavigationItemStyleNavigator;
-    case react::RNSHeaderConfigIOSNavigationItemStyle::Browser:
+    case react::RNSStackHeaderConfigIOSNavigationItemStyle::Browser:
       return UINavigationItemStyleBrowser;
-    case react::RNSHeaderConfigIOSNavigationItemStyle::Editor:
+    case react::RNSStackHeaderConfigIOSNavigationItemStyle::Editor:
       return UINavigationItemStyleEditor;
   }
 }
 #endif
 
-template <>
-RNSStackScreenActivityMode convert(react::RNSStackScreenActivityMode mode)
+RNSStackScreenActivityMode RNSStackScreenActivityModeFromReactRNSStackScreenActivityMode(
+    react::RNSStackScreenActivityMode mode)
 {
   return static_cast<RNSStackScreenActivityMode>(mode);
 }
 
-template <>
-RNSHeaderItemPlacement convert(react::RNSHeaderItemIOSPlacement placement)
+RNSHeaderItemPlacement RNSHeaderItemPlacementFromReactRNSStackHeaderItemIOSPlacement(
+    react::RNSStackHeaderItemIOSPlacement placement)
 {
   switch (placement) {
-    case react::RNSHeaderItemIOSPlacement::Leading:
+    case react::RNSStackHeaderItemIOSPlacement::Leading:
       return RNSHeaderItemPlacementLeading;
-    case react::RNSHeaderItemIOSPlacement::Trailing:
+    case react::RNSStackHeaderItemIOSPlacement::Trailing:
       return RNSHeaderItemPlacementTrailing;
-    case react::RNSHeaderItemIOSPlacement::Toolbar:
+    case react::RNSStackHeaderItemIOSPlacement::Toolbar:
       return RNSHeaderItemPlacementToolbar;
-    case react::RNSHeaderItemIOSPlacement::Title:
+    case react::RNSStackHeaderItemIOSPlacement::Title:
       return RNSHeaderItemPlacementTitle;
-    case react::RNSHeaderItemIOSPlacement::Subtitle:
+    case react::RNSStackHeaderItemIOSPlacement::Subtitle:
       return RNSHeaderItemPlacementSubtitle;
-    case react::RNSHeaderItemIOSPlacement::LargeSubtitle:
+    case react::RNSStackHeaderItemIOSPlacement::LargeSubtitle:
       return RNSHeaderItemPlacementLargeSubtitle;
   }
 }
 
-UIBarButtonItemStyle UIBarButtonItemStyleFromReactRNSHeaderItemIOSVariant(react::RNSHeaderItemIOSVariant variant)
+UIBarButtonItemStyle UIBarButtonItemStyleFromReactRNSStackHeaderItemIOSVariant(
+    react::RNSStackHeaderItemIOSVariant variant)
 {
   switch (variant) {
-    case react::RNSHeaderItemIOSVariant::Plain:
+    case react::RNSStackHeaderItemIOSVariant::Plain:
       return UIBarButtonItemStylePlain;
-    case react::RNSHeaderItemIOSVariant::Done:
+    case react::RNSStackHeaderItemIOSVariant::Done:
       return UIBarButtonItemStyleDone;
-    case react::RNSHeaderItemIOSVariant::Prominent:
+    case react::RNSStackHeaderItemIOSVariant::Prominent:
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
       if (@available(iOS 26.0, *)) {
         return UIBarButtonItemStyleProminent;
@@ -63,90 +64,87 @@ UIBarButtonItemStyle UIBarButtonItemStyleFromReactRNSHeaderItemIOSVariant(react:
   }
 }
 
-template <>
-RNSHeaderItemSpacerPlacement convert(react::RNSHeaderItemSpacerIOSPlacement placement)
+RNSHeaderItemSpacerPlacement RNSHeaderItemSpacerPlacementFromReactRNSStackHeaderItemSpacerIOSPlacement(
+    react::RNSStackHeaderItemSpacerIOSPlacement placement)
 {
   switch (placement) {
-    case react::RNSHeaderItemSpacerIOSPlacement::Leading:
+    case react::RNSStackHeaderItemSpacerIOSPlacement::Leading:
       return RNSHeaderItemSpacerPlacementLeading;
-    case react::RNSHeaderItemSpacerIOSPlacement::Trailing:
+    case react::RNSStackHeaderItemSpacerIOSPlacement::Trailing:
       return RNSHeaderItemSpacerPlacementTrailing;
-    case react::RNSHeaderItemSpacerIOSPlacement::Toolbar:
+    case react::RNSStackHeaderItemSpacerIOSPlacement::Toolbar:
       return RNSHeaderItemSpacerPlacementToolbar;
   }
 }
 
-template <>
-UINavigationItemBackButtonDisplayMode convert(react::RNSHeaderConfigIOSBackButtonDisplayMode displayMode)
+UINavigationItemBackButtonDisplayMode
+UINavigationItemBackButtonDisplayModeFromReactRNSStackHeaderConfigIOSBackButtonDisplayMode(
+    react::RNSStackHeaderConfigIOSBackButtonDisplayMode displayMode)
 {
   switch (displayMode) {
-    case react::RNSHeaderConfigIOSBackButtonDisplayMode::Default:
+    case react::RNSStackHeaderConfigIOSBackButtonDisplayMode::Default:
       return UINavigationItemBackButtonDisplayModeDefault;
-    case react::RNSHeaderConfigIOSBackButtonDisplayMode::Generic:
+    case react::RNSStackHeaderConfigIOSBackButtonDisplayMode::Generic:
       return UINavigationItemBackButtonDisplayModeGeneric;
-    case react::RNSHeaderConfigIOSBackButtonDisplayMode::Minimal:
+    case react::RNSStackHeaderConfigIOSBackButtonDisplayMode::Minimal:
       return UINavigationItemBackButtonDisplayModeMinimal;
   }
 }
 
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_VISION && !TARGET_OS_TV
 
-UIBarMinimizationBehavior UIBarMinimizationBehaviorFromReactRNSHeaderConfigIOSMinimizationBehavior(
-    react::RNSHeaderConfigIOSMinimizationBehavior minimizationBehavior)
+UIBarMinimizationBehavior UIBarMinimizationBehaviorFromReactRNSStackHeaderConfigIOSMinimizationBehavior(
+    react::RNSStackHeaderConfigIOSMinimizationBehavior minimizationBehavior)
 {
   switch (minimizationBehavior) {
-    case react::RNSHeaderConfigIOSMinimizationBehavior::Automatic:
+    case react::RNSStackHeaderConfigIOSMinimizationBehavior::Automatic:
       return UIBarMinimizationBehaviorAutomatic;
-    case react::RNSHeaderConfigIOSMinimizationBehavior::Never:
+    case react::RNSStackHeaderConfigIOSMinimizationBehavior::Never:
       return UIBarMinimizationBehaviorNever;
-    case react::RNSHeaderConfigIOSMinimizationBehavior::OnScrollDown:
+    case react::RNSStackHeaderConfigIOSMinimizationBehavior::OnScrollDown:
       return UIBarMinimizationBehaviorOnScrollDown;
-    case react::RNSHeaderConfigIOSMinimizationBehavior::OnScrollUp:
+    case react::RNSStackHeaderConfigIOSMinimizationBehavior::OnScrollUp:
       return UIBarMinimizationBehaviorOnScrollUp;
   }
 }
 
-UIBarMinimizationRestorationBehavior UIBarMinimizationRestorationBehaviorFromReactRNSHeaderConfigIOSRestorationBehavior(
-    react::RNSHeaderConfigIOSRestorationBehavior restorationBehavior)
+UIBarMinimizationRestorationBehavior
+UIBarMinimizationRestorationBehaviorFromReactRNSStackHeaderConfigIOSRestorationBehavior(
+    react::RNSStackHeaderConfigIOSRestorationBehavior restorationBehavior)
 {
   switch (restorationBehavior) {
-    case react::RNSHeaderConfigIOSRestorationBehavior::Automatic:
+    case react::RNSStackHeaderConfigIOSRestorationBehavior::Automatic:
       return UIBarMinimizationRestorationBehaviorAutomatic;
-    case react::RNSHeaderConfigIOSRestorationBehavior::AtScrollEdge:
+    case react::RNSStackHeaderConfigIOSRestorationBehavior::AtScrollEdge:
       return UIBarMinimizationRestorationBehaviorAtScrollEdge;
   }
 }
 
-UIBarMinimizationSafeAreaAdjustment UIBarMinimizationSafeAreaAdjustmentFromReactRNSHeaderConfigIOSSafeAreaAdjustment(
-    react::RNSHeaderConfigIOSSafeAreaAdjustment safeAreaAdjustment)
+UIBarMinimizationSafeAreaAdjustment
+UIBarMinimizationSafeAreaAdjustmentFromReactRNSStackHeaderConfigIOSSafeAreaAdjustment(
+    react::RNSStackHeaderConfigIOSSafeAreaAdjustment safeAreaAdjustment)
 {
   switch (safeAreaAdjustment) {
-    case react::RNSHeaderConfigIOSSafeAreaAdjustment::Automatic:
+    case react::RNSStackHeaderConfigIOSSafeAreaAdjustment::Automatic:
       return UIBarMinimizationSafeAreaAdjustmentAutomatic;
-    case react::RNSHeaderConfigIOSSafeAreaAdjustment::Enabled:
+    case react::RNSStackHeaderConfigIOSSafeAreaAdjustment::Enabled:
       return UIBarMinimizationSafeAreaAdjustmentEnabled;
-    case react::RNSHeaderConfigIOSSafeAreaAdjustment::Disabled:
+    case react::RNSStackHeaderConfigIOSSafeAreaAdjustment::Disabled:
       return UIBarMinimizationSafeAreaAdjustmentDisabled;
   }
 }
 
 #endif // Check for iOS >= 27 && !TARGET_OS_VISION && !TARGET_OS_TV
-
-RNSStackScreenActivityMode RNSStackScreenActivityModeFromReactRNSStackScreenActivityMode(
-    react::RNSStackScreenActivityMode mode)
-{
-  return convert<RNSStackScreenActivityMode>(mode);
-}
-
-RNSHeaderItemVisibilityPriority RNSHeaderItemVisibilityPriorityFromReactRNSHeaderItemIOSVisibilityPriority(
-    react::RNSHeaderItemIOSVisibilityPriority visibilityPriority)
+  
+RNSHeaderItemVisibilityPriority RNSHeaderItemVisibilityPriorityFromReactRNSStackHeaderItemIOSVisibilityPriority(
+    react::RNSStackHeaderItemIOSVisibilityPriority visibilityPriority)
 {
   switch (visibilityPriority) {
-    case react::RNSHeaderItemIOSVisibilityPriority::Low:
+    case react::RNSStackHeaderItemIOSVisibilityPriority::Low:
       return RNSHeaderItemVisibilityPriorityLow;
-    case react::RNSHeaderItemIOSVisibilityPriority::Standard:
+    case react::RNSStackHeaderItemIOSVisibilityPriority::Standard:
       return RNSHeaderItemVisibilityPriorityStandard;
-    case react::RNSHeaderItemIOSVisibilityPriority::High:
+    case react::RNSStackHeaderItemIOSVisibilityPriority::High:
       return RNSHeaderItemVisibilityPriorityHigh;
   }
 }

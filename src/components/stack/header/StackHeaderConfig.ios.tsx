@@ -15,7 +15,7 @@ import StackHeaderConfigIOSNativeComponent, {
   MenuItemPressEvent,
   MenuSelectionChangeEvent,
   NativeMenuElementOptionsIOS,
-} from '../../../fabric/header/HeaderConfigIOSNativeComponent';
+} from '../../../fabric/stack/StackHeaderConfigIOSNativeComponent';
 import type { StackHeaderItemPlacement } from './ios/StackHeaderItem.ios.types';
 import { StackHeaderItemSpacerPlacement } from './ios/StackHeaderItemSpacer.ios.types';
 import StackHeaderItemSpacer from './ios/StackHeaderItemSpacer.ios';

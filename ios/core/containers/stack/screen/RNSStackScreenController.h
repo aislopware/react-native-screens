@@ -6,13 +6,13 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class RNSStackController;
-@class RNSHeaderCoordinator;
+@class RNSStackScreenHeaderCoordinator;
 @protocol RNSStackContainerItemConfigProviding;
 @protocol RNSStackScreenControllerDelegate;
 
 @interface RNSStackScreenController : UIViewController <RNSContainerItem>
 
-@property (nonatomic, strong, readonly, nonnull) RNSHeaderCoordinator *headerCoordinator;
+@property (nonatomic, strong, readonly, nonnull) RNSStackScreenHeaderCoordinator *headerCoordinator;
 
 @property (nonatomic, weak, nullable) id<RNSStackScreenControllerDelegate> delegate;
 @property (nonatomic, weak, nullable) id<RNSStackContainerItemConfigProviding> configProvider;
@@ -36,6 +36,12 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)stackScreenControllerDidLeaveStack:(RNSStackScreenController *)controller;
 
+/**
+ * Called when UIKit was about to pop the screen (back button, gesture) and the stack refused, because the screen
+ * prevents native dismissal.
+ */
+- (void)stackScreenControllerDidPreventNativeDismiss:(RNSStackScreenController *)controller;
+
 @end
 
 /**
@@ -44,6 +50,11 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol RNSStackContainerItemConfigProviding <NSObject>
 
 @property (nonatomic, readonly, nullable) NSString *screenKey;
+
+/**
+ * Whether the stack must refuse a pop of the screen that UIKit starts on its own.
+ */
+@property (nonatomic, readonly) BOOL preventsNativeDismiss;
 
 /**
  * Content scroll view registered within the screen, or nil if none has been registered.

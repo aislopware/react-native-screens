@@ -67,17 +67,8 @@ const candidateFiles = process.argv.slice(2).flatMap(arg => {
     ? listFiles(target, /\.(h|m|mm|cpp)$/)
     : [target];
 });
-// Onicode fork: the neutral header family and the stack machinery typed on
-// `RNSStackScreenProviding` stay in their own directories. They still depend on
-// React Native, so they are not checked as `core`, but the `core` controllers
-// that host them may import them.
-const FORK_DIRS = ['header', 'helpers/stack'].map(dir =>
-  path.join(IOS_DIR, dir),
-);
 const isAllowedTarget = target =>
-  isUnder(target, CORE_DIR) ||
-  FORK_DIRS.some(dir => isUnder(target, dir)) ||
-  candidateFiles.includes(target);
+  isUnder(target, CORE_DIR) || candidateFiles.includes(target);
 
 if (coreFiles.length === 0) {
   console.error(

@@ -9,21 +9,23 @@
 #import <react/renderer/components/rnscreens/RNSStackHostComponentDescriptor.h>
 #import "RNSDefines.h"
 #import "RNSLog.h"
+#import <React/RCTSurfaceTouchHandler.h>
 
+#import "RCTSurfaceTouchHandler+RNSUtility.h"
 #import "RNSContainerHelpers.h"
-#import "RNSHeaderConfigComponentView.h"
+#import "RNSStackHeaderConfigComponentView.h"
 #import "RNSStackNavigationController.h"
 #import "RNSStackOperationCoordinator.h"
 #import "RNSStackScreenComponentView.h"
 
 namespace react = facebook::react;
 
-@interface RNSStackHostComponentView () <RCTMountingTransactionObserving>
+@interface RNSStackHostComponentView () <RCTMountingTransactionObserving, RNSStackPopGestureObserver>
 @end
 
 @implementation RNSStackHostComponentView {
   RNSStackOperationCoordinator *_Nonnull _stackOperationCoordinator;
-  NSMutableArray<UIView<RNSStackScreenProviding> *> *_Nonnull _renderedScreens;
+  NSMutableArray<RNSStackScreenComponentView *> *_Nonnull _renderedScreens;
   BOOL _didSetHeadlessModeEnabled;
   BOOL _isWaitingForTransition;
 }
@@ -42,6 +44,7 @@ namespace react = facebook::react;
   _props = defaultProps;
 
   _stackNavigationController = [RNSStackNavigationController new];
+  _stackNavigationController.popGestureObserver = self;
   _stackOperationCoordinator = [RNSStackOperationCoordinator new];
   _renderedScreens = [NSMutableArray new];
 }
@@ -76,7 +79,7 @@ namespace react = facebook::react;
 - (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
 {
   if (CGRectContainsPoint(_stackNavigationController.navigationBar.frame, point)) {
-    RNSHeaderConfigComponentView *headerConfig = [self requireTopScreenHeaderConfig];
+    RNSStackHeaderConfigComponentView *headerConfig = [self requireTopScreenHeaderConfig];
     CGPoint convertedPoint = [self convertPoint:point toView:headerConfig];
     UIView *headerHitTestResult = [headerConfig hitTest:convertedPoint withEvent:event];
     if (headerHitTestResult != nil) {
@@ -199,14 +202,29 @@ namespace react = facebook::react;
   ]];
 }
 
-- (RNSHeaderConfigComponentView *)requireTopScreenHeaderConfig
+- (RNSStackHeaderConfigComponentView *)requireTopScreenHeaderConfig
 {
-  UIView *topScreenView = _stackNavigationController.topViewController.view;
-  RCTAssert([topScreenView conformsToProtocol:@protocol(RNSStackScreenProviding)],
-            @"[RNScreens] Expected top screen to be a react component view of a stack screen, got %@",
-            topScreenView);
+  RCTAssert([_stackNavigationController.topViewController.view isKindOfClass:[RNSStackScreenComponentView class]],
+            @"[RNScreens] Expected top screen to be a react component view of type RNSStackScreenComponentView");
+  auto screenView = (RNSStackScreenComponentView *)_stackNavigationController.topViewController.view;
 
-  return [(id<RNSStackScreenProviding>)topScreenView headerConfig];
+  return screenView.headerConfig;
+}
+
+#pragma mark - RNSStackPopGestureObserver
+
+- (void)stackNavigationController:(RNSStackNavigationController *)controller
+               didBeginPopGesture:(UIGestureRecognizer *)gestureRecognizer
+{
+  // The nearest touch handler is the one of the root view, of a sheet or of a Split column.
+  for (UIView *view = gestureRecognizer.view; view != nil; view = view.superview) {
+    for (UIGestureRecognizer *recognizer in view.gestureRecognizers) {
+      if ([recognizer isKindOfClass:RCTSurfaceTouchHandler.class]) {
+        [static_cast<RCTSurfaceTouchHandler *>(recognizer) rnscreens_cancelTouches];
+        return;
+      }
+    }
+  }
 }
 
 #pragma mark - RCTMountingTransactionObserving
