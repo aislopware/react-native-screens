@@ -24,8 +24,11 @@ import { describeIfIOS, describeIfIOSAtLeast } from '@e2e/framework/platform';
  */
 const actionRow = (title: string) => menuRow(title, { actionsOnly: true });
 
-/** UIKit's automatic identifier for the iOS 26 toolbar overflow ("More") item. */
-const OVERFLOW_BUTTON = by.id('OverflowBarButtonItem');
+/**
+ * UIKit's automatic identifier for the iOS 26 toolbar overflow ("More") item.
+ * iOS 27.2 names it `TopOverflowBarButtonItem`.
+ */
+const OVERFLOW_BUTTON = by.id(/(Top)?OverflowBarButtonItem/);
 
 async function toggleItemsCount() {
   await element(by.id('toggle-items-count-button')).tap();
