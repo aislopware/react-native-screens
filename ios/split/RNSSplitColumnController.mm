@@ -3,7 +3,7 @@
 #import "RNSAssert.h"
 #import "RNSLog.h"
 #import "RNSSplitColumnControllerDelegate.h"
-#import "RNSSplitColumnFrameObserver.h"
+#import "RNSSplitColumnNavigationControllerFrameObserver.h"
 #import "RNSStackNavigationController.h"
 #import "RNSStackOperationCoordinator.h"
 #import "RNSViewFrameChangeDelegate.h"
@@ -15,7 +15,7 @@
   RNSStackNavigationController *_navigationController;
   RNSStackOperationCoordinator *_operationCoordinator;
   NSMutableArray<UIView<RNSStackScreenProviding> *> *_renderedScreens;
-  RNSSplitColumnFrameObserver *_frameObserver;
+  RNSSplitColumnNavigationControllerFrameObserver *_frameObserver;
   BOOL _waitingForTransition;
 }
 
@@ -28,8 +28,9 @@
     _renderedScreens = [NSMutableArray new];
     // The view must exist to observe its frame; it is loaded before the Split installs it in a column anyway.
     [_navigationController loadViewIfNeeded];
-    _frameObserver = [[RNSSplitColumnFrameObserver alloc] initWithNavigationController:_navigationController
-                                                                              delegate:self];
+    _frameObserver =
+        [[RNSSplitColumnNavigationControllerFrameObserver alloc] initWithNavigationController:_navigationController
+                                                                                     delegate:self];
     [_frameObserver registerForViewFrameChanges];
   }
 

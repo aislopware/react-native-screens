@@ -7,8 +7,8 @@ import android.view.animation.Animation
 import android.view.animation.AnimationSet
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.facebook.react.uimanager.ReactPointerEventsView
-import com.swmansion.rnscreens.core.modals.formsheet.FormSheetPlacement
-import com.swmansion.rnscreens.core.modals.formsheet.FormSheetPostureObserver
+import com.swmansion.rnscreens.core.modals.sheet.FormSheetPlacement
+import com.swmansion.rnscreens.core.modals.sheet.FormSheetPostureObserver
 import com.swmansion.rnscreens.legacy.PointerEventsBoxNoneImpl
 import com.swmansion.rnscreens.legacy.ScreenStackFragment
 import com.swmansion.rnscreens.legacy.bottomsheet.usesFormSheetPresentation

@@ -13,6 +13,7 @@
 #import "RNSStackScreenComponentEventEmitter.h"
 #import "RNSStackScreenComponentView.h"
 #import "RNSStackScreenProviding.h"
+#import "RNSViewControllerViewLifecycleEventsObserver.h"
 #import "RNSViewFrameChangeDelegate.h"
 
 @interface RNSStackNavigationController ()
@@ -246,6 +247,32 @@
 {
   [super viewDidLayoutSubviews];
   [_navigationBarFrameChangeDelegate viewFrameDidChange:self.navigationBar];
+}
+
+#pragma mark - View lifecycle events
+
+- (void)viewWillAppear:(BOOL)animated
+{
+  [super viewWillAppear:animated];
+  [_viewLifecycleEventsObserver viewControllerViewWillAppear:self];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+  [super viewDidAppear:animated];
+  [_viewLifecycleEventsObserver viewControllerViewDidAppear:self];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+  [super viewWillDisappear:animated];
+  [_viewLifecycleEventsObserver viewControllerViewWillDisappear:self];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+  [super viewDidDisappear:animated];
+  [_viewLifecycleEventsObserver viewControllerViewDidDisappear:self];
 }
 
 #pragma mark - RNSContainer

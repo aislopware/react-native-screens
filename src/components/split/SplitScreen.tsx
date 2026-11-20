@@ -9,6 +9,17 @@ import type { SplitScreenProps, SplitStackProps } from './SplitScreen.types';
 export const SplitColumnIndexContext = React.createContext<number>(-1);
 
 /**
+ * A column is navigated with `Split.Stack` here, so a `Stack.Host` rendered in it is always nested as plain content:
+ * `SplitColumnMarkerContext` is never provided, and `disableStackIntegration` is dropped instead of reaching the
+ * native component.
+ */
+function toNativeProps(props: SplitScreenProps) {
+  const nativeProps = { ...props };
+  delete nativeProps.disableStackIntegration;
+  return nativeProps;
+}
+
+/**
  * A screen in the navigation stack of a column.
  */
 function Screen(props: SplitScreenProps) {
@@ -17,7 +28,7 @@ function Screen(props: SplitScreenProps) {
     <SplitScreenNativeComponent
       columnType="column"
       column={column}
-      {...props}
+      {...toNativeProps(props)}
       style={StyleSheet.absoluteFill}>
       {props.children}
     </SplitScreenNativeComponent>
@@ -56,7 +67,7 @@ function Inspector(props: SplitScreenProps) {
   return (
     <SplitScreenNativeComponent
       columnType="inspector"
-      {...props}
+      {...toNativeProps(props)}
       style={StyleSheet.absoluteFill}>
       {props.children}
     </SplitScreenNativeComponent>

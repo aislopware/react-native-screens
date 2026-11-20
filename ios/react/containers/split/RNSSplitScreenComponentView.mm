@@ -7,7 +7,7 @@
 #import "RNSConversions-SplitView.h"
 #import "RNSHeaderConfigComponentView.h"
 #import "RNSHeaderCoordinator.h"
-#import "RNSNavigationItemCustomizing.h"
+#import "RNSNavigationItemCustomizing.h" // legacy-compat: configures the header of a column with the legacy stack
 #import "RNSSafeAreaViewNotifications.h"
 #import "RNSScrollViewSeeking.h"
 #import "RNSSplitHostComponentView.h"

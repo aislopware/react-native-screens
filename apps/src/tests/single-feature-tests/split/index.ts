@@ -6,6 +6,10 @@ import TestSplitPressables from './test-split-pressables-ios';
 import TestSplitStackColumns from './test-split-stack-columns-ios';
 import TestSplitEmptyStackColumns from './test-split-empty-stack-columns-ios';
 import TestSplitColumnVisibility from './test-split-column-visibility-ios';
+import TestSplitStackHeaderNavigation from './test-split-stack-header-navigation-ios';
+import TestSplitStackLifecycleEvents from './test-split-stack-lifecycle-events-ios';
+import TestSplitStackContentSwap from './test-split-stack-content-swap-ios';
+import TestSplitStackIntegrationDisabled from './test-split-stack-integration-disabled-ios';
 
 export { default as TestSplitTopColumnForCollapsing } from './test-top-column-for-collapsing';
 export { default as TestSplitCommandShowColumn } from './test-command-show-column';
@@ -14,6 +18,10 @@ export { default as TestSplitPressables } from './test-split-pressables-ios';
 export { default as TestSplitStackColumns } from './test-split-stack-columns-ios';
 export { default as TestSplitEmptyStackColumns } from './test-split-empty-stack-columns-ios';
 export { default as TestSplitColumnVisibility } from './test-split-column-visibility-ios';
+export { default as TestSplitStackHeaderNavigation } from './test-split-stack-header-navigation-ios';
+export { default as TestSplitStackLifecycleEvents } from './test-split-stack-lifecycle-events-ios';
+export { default as TestSplitStackContentSwap } from './test-split-stack-content-swap-ios';
+export { default as TestSplitStackIntegrationDisabled } from './test-split-stack-integration-disabled-ios';
 
 const scenarios = {
   TestSplitTopColumnForCollapsing,
@@ -23,6 +31,10 @@ const scenarios = {
   TestSplitStackColumns,
   TestSplitEmptyStackColumns,
   TestSplitColumnVisibility,
+  TestSplitStackHeaderNavigation,
+  TestSplitStackLifecycleEvents,
+  TestSplitStackContentSwap,
+  TestSplitStackIntegrationDisabled,
 };
 
 const SplitScenarioGroup: ScenarioGroup<keyof typeof scenarios> = {

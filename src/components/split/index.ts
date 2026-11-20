@@ -13,12 +13,12 @@ export type {
   SplitColorScheme,
   SplitColumnMetrics,
   SplitNavigableColumn,
+  SplitSidebarColumn,
   SplitHostCommands,
   SplitHostProps,
 } from './SplitHost.types';
 
 export type {
-  SplitScreenColumnType,
   SplitColumnProps,
   SplitInspectorProps,
   SplitScreenActivityMode,
@@ -58,6 +58,12 @@ export const Split = {
   Host: SplitHost,
   /**
    * A column of {@link Split.Host}.
+   *
+   * @remarks
+   * A column is navigated with a {@link Split.Stack} of {@link Split.Screen}
+   * children. Upstream's integration of a `Stack.Host` with a column is not
+   * part of Onicode's fork: a `Stack.Host` rendered in a column is nested like
+   * any other content.
    *
    * @platform ios
    * @experimental

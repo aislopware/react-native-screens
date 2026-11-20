@@ -1,10 +1,12 @@
 import type { ReactElement } from 'react';
 import type { ColorValue } from 'react-native';
 import type { PlatformIconIOS } from '../../../shared/types';
-import type { StackHeaderItemVariantIOS } from '../StackHeaderConfig.ios.types';
+import type {
+  StackHeaderItemAxisBehaviorIOS,
+  StackHeaderItemVariantIOS,
+  StackHeaderItemVisibilityPriorityIOS,
+} from '../StackHeaderConfig.ios.types';
 import type { StackHeaderMenuIOS } from './StackHeaderMenu.ios.types';
-import type { StackHeaderItemAxisBehaviorIOS } from '../StackHeaderConfig.ios.types';
-import type { StackHeaderItemVisibilityPriorityIOS } from '../StackHeaderConfig.ios.types';
 
 export type StackHeaderItemPlacement =
   | 'leading'
@@ -19,7 +21,6 @@ export type StackHeaderItemProps = {
   itemId?: string | undefined;
   identifier?: string | undefined;
   hidesSharedBackground?: boolean | undefined;
-  /** Uses UIKit's search placement item on iOS 26 and later. */
   searchBarPlacement?: boolean | undefined;
   axisBehavior?: StackHeaderItemAxisBehaviorIOS | undefined;
   visibilityPriority?: StackHeaderItemVisibilityPriorityIOS | undefined;
