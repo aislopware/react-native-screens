@@ -173,6 +173,17 @@ RNS_IGNORE_SUPER_CALL_END
 
 #pragma mark - RCTComponentViewProtocol
 
+- (void)updateLayoutMetrics:(const facebook::react::LayoutMetrics &)layoutMetrics
+           oldLayoutMetrics:(const facebook::react::LayoutMetrics &)oldLayoutMetrics
+{
+  [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
+
+  // A move without a resize lays out no column, and their frames are relative to a view above the host.
+  if (layoutMetrics.frame.origin != oldLayoutMetrics.frame.origin) {
+    [_controller notifyColumnsAboutPositioningChange];
+  }
+}
+
 - (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
 {
   RCTAssert([childComponentView isKindOfClass:RNSSplitScreenComponentView.class],

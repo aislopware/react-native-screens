@@ -19,6 +19,21 @@ namespace react = facebook::react;
 @interface RNSSplitScreenComponentView () <RNSSplitColumnCoordinatorDelegate>
 @end
 
+/**
+ * The nearest view above `view` a RCTSurfaceTouchHandler is attached to, nil (the window) when there is none.
+ */
+static UIView *_Nullable RNSTouchRootViewForView(UIView *_Nonnull view)
+{
+  for (UIView *ancestor = view.superview; ancestor != nil; ancestor = ancestor.superview) {
+    for (UIGestureRecognizer *recognizer in ancestor.gestureRecognizers) {
+      if ([recognizer isKindOfClass:RCTSurfaceTouchHandler.class]) {
+        return ancestor;
+      }
+    }
+  }
+  return nil;
+}
+
 @implementation RNSSplitScreenComponentView {
   RNSSplitScreenComponentEventEmitter *_Nonnull _reactEventEmitter;
   RNSSplitColumnCoordinator *_Nullable _columnCoordinator;
@@ -168,8 +183,21 @@ namespace react = facebook::react;
 
 #pragma mark - RNSSplitColumnCoordinatorDelegate
 
+/**
+ * Measurement of the column's content stops at the column, a `RootNodeKind` shadow node, and adds the origin of this
+ * frame. It has to be in the coordinate space of the view the RCTSurfaceTouchHandler of the content is attached to,
+ * as `pageX`/`pageY` of a touch are. Otherwise a press is cancelled as soon as the finger moves.
+ *
+ * For a column of a modal the coordinator reports the bounds of the view the touch handler is attached to.
+ */
 - (void)splitColumnCoordinator:(RNSSplitColumnCoordinator *)coordinator didChangeColumnFrame:(CGRect)frame
 {
+  if ([coordinator isInSplitHostSubtree]) {
+    UIView *splitView = _splitHost.splitHostController.view;
+    if (splitView != nil) {
+      frame.origin = [splitView convertPoint:frame.origin toView:RNSTouchRootViewForView(splitView)];
+    }
+  }
   [_shadowStateProxy updateShadowStateWithFrame:frame];
 }
 
@@ -180,6 +208,8 @@ namespace react = facebook::react;
 
 - (void)splitColumnDidAppear:(RNSSplitColumnCoordinator *)coordinator
 {
+  // The column may have been laid out while a transition of an ancestor had it moved.
+  [coordinator columnPositioningDidChange];
   [self updateTouchHandler];
   [_reactEventEmitter emitOnDidAppear];
 }

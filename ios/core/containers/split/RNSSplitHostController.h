@@ -87,6 +87,13 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (void)refreshSecondaryNavBar;
 
+#pragma mark - Layout
+
+/**
+ * @brief Makes the columns report their frame again. Called when the Split itself was moved, which lays out no column.
+ */
+- (void)notifyColumnsAboutPositioningChange;
+
 #pragma mark - Public setters
 
 /**
