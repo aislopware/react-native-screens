@@ -64,7 +64,7 @@ static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromV
 #if !TARGET_OS_TV
   navController.toolbar.tintColor = _configDataProvider.tintColor;
 #endif
-  BOOL hidden = _configDataProvider == nil || _configDataProvider.hidden;
+  BOOL hidden = _configDataProvider == nil ? !_showsNavigationBarWithoutHeaderConfig : _configDataProvider.hidden;
   [navController.navigationBarCoordinator setHidden:hidden forNavigationController:navController animated:animated];
 }
 

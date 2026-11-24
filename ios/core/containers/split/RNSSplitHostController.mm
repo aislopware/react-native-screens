@@ -4,8 +4,8 @@
 #import "RNSDefines.h"
 #import "RNSSplitAppearanceApplicator.h"
 #import "RNSSplitAppearanceCoordinator.h"
+#import "RNSSplitColumnCoordinator.h"
 #import "RNSSplitColumnNavigationControllerFrameObserver.h"
-#import "RNSSplitScreenController.h"
 #import "RNSStackNavigationController.h"
 #import "RNSViewFrameChangeDelegate.h"
 
@@ -29,16 +29,6 @@
   NSInteger _fixedColumnsCount;
 
   /**
-   * Tracks currently visible columns of the UISplitViewController.
-   *
-   * This set is kept in sync via `UISplitViewControllerDelegate` methods (`willShow` / `willHide`)
-   * to reflect which columns are currently rendered in the UI.
-   * It ensures that only visible columns are considered (e.g. for accessing topViewController),
-   * avoiding crashes when certain columns are collapsed or hidden.
-   */
-  NSMutableSet<NSNumber *> *_visibleColumns;
-
-  /**
    * Observe the frames of the views of the navigation controllers installed for the columns.
    *
    * UISplitViewController moves the columns on its own, on display mode change or column resize. The columns are
@@ -54,7 +44,6 @@
     _splitAppearanceApplicator = [RNSSplitAppearanceApplicator new];
     _fixedColumnsCount = numberOfColumns;
     _needsChildViewControllersUpdate = NO;
-    _visibleColumns = [NSMutableSet set];
 
     self.delegate = self;
   }
@@ -121,8 +110,8 @@
   RNSAssert(_needsChildViewControllersUpdate,
             @"[RNScreens] Child view controller must be invalidated when update is forced!");
 
-  NSArray<RNSSplitScreenController *> *currentColumns = [self.columnsProvider columnControllers];
-  NSArray<RNSSplitScreenController *> *currentInspectors = [self.columnsProvider inspectorControllers];
+  NSArray<RNSSplitColumnCoordinator *> *currentColumns = [self.columnsProvider columnCoordinators];
+  NSArray<RNSSplitColumnCoordinator *> *currentInspectors = [self.columnsProvider inspectorCoordinators];
 
   [self validateColumns:currentColumns];
   [self validateInspectors:currentInspectors];
@@ -303,12 +292,12 @@
 /** @brief Validates that child structure meets required constraints defined for columns and the inspector. */
 - (void)validateSplitViewHierarchy
 {
-  [self validateColumns:[self.columnsProvider columnControllers]];
-  [self validateInspectors:[self.columnsProvider inspectorControllers]];
+  [self validateColumns:[self.columnsProvider columnCoordinators]];
+  [self validateInspectors:[self.columnsProvider inspectorCoordinators]];
 }
 
 /** @brief Ensures that number of columns is valid and hasn't changed dynamically. */
-- (void)validateColumns:(NSArray<RNSSplitScreenController *> *)columns
+- (void)validateColumns:(NSArray<RNSSplitColumnCoordinator *> *)columns
 {
   RNSAssert((NSInteger)columns.count >= minNumberOfColumns && (NSInteger)columns.count <= maxNumberOfColumns,
             @"[RNScreens] Split can only have from %ld to %ld columns",
@@ -320,7 +309,7 @@
 }
 
 /** @brief Ensures that at most one inspector is present. */
-- (void)validateInspectors:(NSArray<RNSSplitScreenController *> *)inspectors
+- (void)validateInspectors:(NSArray<RNSSplitColumnCoordinator *> *)inspectors
 {
   RNSAssert((NSInteger)inspectors.count <= maxNumberOfInspectors,
             @"[RNScreens] Split can only have %ld inspector",
@@ -328,40 +317,20 @@
 }
 
 /**
- * @brief Gets the RNSSplitScreenController instances of the visible columns that do NOT host a stack.
+ * @brief Notifies the columns that the Split repositioned its columns.
  *
- * In a column that hosts a stack the navigation controller holds the screens of the stack, and the
- * RNSSplitScreenController of the column is not in the view controller hierarchy. Such a column is left out.
- *
- * @return An array of RNSSplitScreenController corresponding to the visible columns that do not host a stack.
+ * Every column is notified, and a column that is not on screen ignores it. UIKit does not tell the delegate about
+ * every column it shows or hides (e.g. not when `showColumn:` is called), so the Split does not track which columns
+ * are visible.
  */
-- (NSArray<RNSSplitScreenController *> *)visibleSplitScreenControllersWithoutStack
+- (void)notifyColumnsAboutPositioningChange
 {
-  NSMutableArray<RNSSplitScreenController *> *splitScreenControllers =
-      [NSMutableArray arrayWithCapacity:_visibleColumns.count];
-
-  for (NSNumber *columnNumber in _visibleColumns) {
-    UISplitViewControllerColumn column = (UISplitViewControllerColumn)columnNumber.integerValue;
-    UIViewController *viewController = [self viewControllerForColumn:column];
-    RNSAssert(viewController != nil, @"[RNScreens] viewController for column %ld is nil.", (long)column);
-
-    RNSStackNavigationController *navigationController =
-        [viewController isKindOfClass:RNSStackNavigationController.class]
-        ? (RNSStackNavigationController *)viewController
-        : nil;
-    RNSAssert(navigationController != nil,
-              @"[RNScreens] Expected RNSStackNavigationController but got %@",
-              NSStringFromClass(viewController.class));
-
-    UIViewController *topViewController = navigationController.topViewController;
-    if (![topViewController isKindOfClass:RNSSplitScreenController.class]) {
-      continue;
-    }
-
-    [splitScreenControllers addObject:(RNSSplitScreenController *)topViewController];
+  for (RNSSplitColumnCoordinator *coordinator in [self.columnsProvider columnCoordinators]) {
+    [coordinator columnPositioningDidChange];
   }
-
-  return splitScreenControllers;
+  for (RNSSplitColumnCoordinator *coordinator in [self.columnsProvider inspectorCoordinators]) {
+    [coordinator columnPositioningDidChange];
+  }
 }
 
 #pragma mark - RNSViewFrameChangeDelegate
@@ -369,38 +338,13 @@
 /**
  * @brief Notifies that the origin of the frame of a column's navigation controller view has changed.
  *
- * It iterates over children controllers and notifies them for the layout update.
+ * It notifies the coordinators of the columns for the layout update.
  *
  * @param view The view of the navigation controller whose frame origin changed.
  */
 - (void)viewFrameDidChange:(nonnull UIView *)view
 {
-  [self notifyColumnPositioningDidChange];
-}
-
-/**
- * @brief Makes the content of the visible columns report its frame.
- *
- * A column without a stack reports it through its controller. A screen of a stack reports it when it is laid out,
- * which UIKit does not do on its own when only the origin of the column changes.
- */
-- (void)notifyColumnPositioningDidChange
-{
-  for (RNSSplitScreenController *controller in self.visibleSplitScreenControllersWithoutStack) {
-    [controller columnPositioningDidChangeInSplitViewController:self];
-  }
-
-  for (NSNumber *columnNumber in _visibleColumns) {
-    UIViewController *viewController =
-        [self viewControllerForColumn:(UISplitViewControllerColumn)columnNumber.integerValue];
-    if (![viewController isKindOfClass:UINavigationController.class]) {
-      continue;
-    }
-    UIViewController *topViewController = ((UINavigationController *)viewController).topViewController;
-    if (![topViewController isKindOfClass:RNSSplitScreenController.class]) {
-      [topViewController.viewIfLoaded setNeedsLayout];
-    }
-  }
+  [self notifyColumnsAboutPositioningChange];
 }
 
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
@@ -458,16 +402,6 @@
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(26_0)
 
 #pragma mark - UISplitViewControllerDelegate
-
-- (void)splitViewController:(UISplitViewController *)svc willShowColumn:(UISplitViewControllerColumn)column
-{
-  [_visibleColumns addObject:@(column)];
-}
-
-- (void)splitViewController:(UISplitViewController *)svc willHideColumn:(UISplitViewControllerColumn)column
-{
-  [_visibleColumns removeObject:@(column)];
-}
 
 - (void)splitViewControllerDidCollapse:(UISplitViewController *)svc
 {
@@ -528,7 +462,12 @@
 
   __weak auto weakSelf = self;
   void (^notifyColumnPositioningDidChange)(void) = ^{
-    [weakSelf notifyColumnPositioningDidChange];
+    auto strongSelf = weakSelf;
+    if (strongSelf == nil) {
+      return;
+    }
+
+    [strongSelf notifyColumnsAboutPositioningChange];
   };
 
   id<UIViewControllerTransitionCoordinator> coordinator = svc.transitionCoordinator;

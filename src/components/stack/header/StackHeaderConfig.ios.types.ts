@@ -297,8 +297,7 @@ export interface StackHeaderInlineItemIOS
    * Applied to the item's title and icon. For `'prominent'` items on iOS 26,
    * the tint affects the emphasized background instead.
    *
-   * When unset, the item uses the default system tint.
-   *
+   * @defaultValue The default system tint is used.
    * @platform ios
    */
   tintColor?: ColorValue | undefined;
@@ -840,9 +839,10 @@ export interface StackHeaderConfigPropsIOS {
    *
    * @remarks
    * Configured on the screen whose back button it applies to (the screen that
-   * is pushed on top). When unset, the system derives the back title from the
-   * previous screen's {@link StackHeaderConfigPropsBase.title | title}.
+   * is pushed on top).
    *
+   * @defaultValue The system derives the back title from the previous screen's
+   * {@link StackHeaderConfigPropsBase.title | title}.
    * @platform ios
    */
   backButtonTitle?: string | undefined;
@@ -950,9 +950,9 @@ export interface StackHeaderConfigPropsIOS {
    *
    * @remarks
    * When ScrollView is present on the screen, large header is displayed only
-   * when fully scrolled to top, otherwise it collapses to regular header. If
-   * `largeTitle` is not defined, it falls back to regular title.
+   * when fully scrolled to top, otherwise it collapses to regular header.
    *
+   * @defaultValue The regular title is used.
    * @platform ios >= 26
    */
   largeTitle?: string | undefined;
@@ -969,9 +969,9 @@ export interface StackHeaderConfigPropsIOS {
    *
    * @remarks
    * When ScrollView is present on the screen, large header is displayed only
-   * when fully scrolled to top, otherwise it collapses to regular header. If
-   * `largeSubtitle` is not defined, it falls back to regular subtitle.
+   * when fully scrolled to top, otherwise it collapses to regular header.
    *
+   * @defaultValue The regular subtitle is used.
    * @platform ios >= 26
    */
   largeSubtitle?: string | undefined;
@@ -1044,10 +1044,9 @@ export interface StackHeaderConfigPropsIOS {
    * is aligned with the edge of the header.
    *
    * @remarks
-   * If unset, UIKit derives the configuration from
-   * {@link StackHeaderConfigPropsIOS.standardAppearance | standardAppearance}.
-   * An explicit appearance is independent of `standardAppearance` and starts
-   * with a transparent background unless `backgroundColor` is set.
+   * An explicit appearance is independent of
+   * {@link StackHeaderConfigPropsIOS.standardAppearance | standardAppearance}
+   * and starts with a transparent background unless `backgroundColor` is set.
    *
    * @info
    * Native platform limitation: on iOS 26, header items resolve the `button` /
@@ -1055,6 +1054,8 @@ export interface StackHeaderConfigPropsIOS {
    * at the moment the items are attached to the navigation bar, and do not
    * update on property changes or scroll edge transitions.
    *
+   * @defaultValue The configuration is derived from
+   * {@link StackHeaderConfigPropsIOS.standardAppearance | standardAppearance}.
    * @platform ios
    */
   scrollEdgeAppearance?: StackHeaderAppearanceIOS | undefined;

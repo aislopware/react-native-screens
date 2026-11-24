@@ -235,6 +235,7 @@
 {
   [super viewDidLayoutSubviews];
   [_navigationBarFrameChangeDelegate viewFrameDidChange:self.navigationBar];
+  [_viewFrameChangeDelegate viewFrameDidChange:self.view];
 }
 
 #pragma mark - View lifecycle events
