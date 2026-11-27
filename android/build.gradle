@@ -186,14 +186,18 @@ android {
     }
     sourceSets.main {
         ext.androidResDir = "src/main/res"
+        // StateWrapper.UpdateMode exists since RN 0.89.
+        def stateUpdateModeSrcDir = REACT_NATIVE_MINOR_VERSION <= 88 ? "src/versioned/stateupdatemode/88" : "src/versioned/stateupdatemode/latest"
         kotlin {
             srcDirs += [
                 "src/fabric/java",
+                stateUpdateModeSrcDir,
             ]
         }
         java {
             srcDirs += [
                 "src/fabric/java",
+                stateUpdateModeSrcDir,
             ]
         }
         res {

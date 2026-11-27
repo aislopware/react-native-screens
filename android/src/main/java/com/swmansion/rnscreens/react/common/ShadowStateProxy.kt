@@ -55,10 +55,7 @@ internal class ShadowStateProxy(
                 putDouble("contentOffsetX", offsetXInDp.toDouble())
                 putDouble("contentOffsetY", offsetYInDp.toDouble())
             }
-        stateWrapper?.updateState(
-            map,
-            if (immediate) StateWrapper.UpdateMode.unstable_Immediate else StateWrapper.UpdateMode.Asynchronous,
-        )
+        stateWrapper?.updateStateCompat(map, immediate)
     }
 
     companion object {
