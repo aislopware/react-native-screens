@@ -25,6 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) BOOL hidesSharedBackground;
 @property (nonatomic, readonly) RNSHeaderItemAxisBehavior axisBehavior;
 @property (nonatomic, readonly) RNSHeaderItemVisibilityPriority visibilityPriority;
+@property (nonatomic, readonly) BOOL paddingRemoved;
 
 @property (nonatomic, nullable) NSString *titleProp;
 @property (nonatomic, nullable) RNSStackHeaderIconData *iconProp;

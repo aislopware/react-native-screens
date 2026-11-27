@@ -24,6 +24,7 @@ export type StackHeaderItemProps = {
   searchBarPlacement?: boolean | undefined;
   axisBehavior?: StackHeaderItemAxisBehaviorIOS | undefined;
   visibilityPriority?: StackHeaderItemVisibilityPriorityIOS | undefined;
+  paddingRemoved?: boolean | undefined;
   title?: string | undefined;
   icon?: PlatformIconIOS | undefined;
   render?: (() => ReactElement) | undefined;

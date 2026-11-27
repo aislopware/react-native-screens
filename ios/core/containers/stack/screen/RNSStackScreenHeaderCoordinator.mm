@@ -761,6 +761,17 @@ static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromV
         button.accessibilityLabel = source.accessibilityLabel;
         button.identifier = source.identifier;
         button.hidesSharedBackground = source.hidesSharedBackground;
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_VISION
+        if (@available(iOS 27.0, *)) {
+          button.paddingRemoved = source.paddingRemoved;
+          button.visibilityPriority = source.visibilityPriority;
+        }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_VISION
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_1) && !TARGET_OS_VISION
+        if (@available(iOS 27.1, *)) {
+          button.axisBehavior = source.axisBehavior;
+        }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_1) && !TARGET_OS_VISION
         button.symbolAnimationEnabled = NO;
         [items addObject:button];
       }
@@ -875,6 +886,11 @@ static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromV
     previous.visibilityPriority = source.visibilityPriority;
   }
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0)
+  if (@available(iOS 27.0, *)) {
+    previous.paddingRemoved = source.paddingRemoved;
+  }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0)
 #if RNS_IPHONE_OS_VERSION_AVAILABLE(27_1) && !TARGET_OS_TV && !TARGET_OS_VISION
   if (@available(iOS 27.1, *)) {
     previous.axisBehavior = source.axisBehavior;
@@ -941,6 +957,12 @@ static UIBarButtonItemVisibilityPriority RNSBarButtonItemVisibilityPriorityFromV
         RNSBarButtonItemVisibilityPriorityFromVisibilityPriority(item.visibilityPriority);
   }
 #endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0) && !TARGET_OS_TV && !TARGET_OS_VISION
+
+#if RNS_IPHONE_OS_VERSION_AVAILABLE(27_0)
+  if (@available(iOS 27.0, *)) {
+    barButtonItem.paddingRemoved = item.paddingRemoved;
+  }
+#endif // RNS_IPHONE_OS_VERSION_AVAILABLE(27_0)
 
   // Search placement items are created by UIKit, so apply axis behavior here
   // alongside the ordinary items created by the content factory.

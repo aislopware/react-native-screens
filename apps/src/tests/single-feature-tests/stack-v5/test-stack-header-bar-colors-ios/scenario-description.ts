@@ -6,6 +6,7 @@ export const scenarioDescription: ScenarioDescription = {
   details:
     'Tests independent standard and scroll-edge background and shadow colors, dynamic colors and resets.',
   platforms: ['ios'],
+  devices: ['iphone'],
   e2eCoverage: 'incomplete',
   smokeTest: false,
 };

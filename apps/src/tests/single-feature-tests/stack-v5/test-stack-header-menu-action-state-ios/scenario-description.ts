@@ -6,6 +6,7 @@ export const scenarioDescription: ScenarioDescription = {
   details:
     'Tests application-owned action state and native toggle distinctions.',
   platforms: ['ios'],
+  devices: ['iphone'],
   e2eCoverage: 'incomplete',
   smokeTest: false,
 };

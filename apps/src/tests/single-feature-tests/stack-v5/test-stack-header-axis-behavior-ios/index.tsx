@@ -38,7 +38,7 @@ function Screen({ second = false }: { second?: boolean }) {
           ? [
               {
                 id: 'native',
-                type: 'item',
+                type: 'button',
                 identifier: 'axis-native',
                 icon: {
                   type: 'sfSymbol',
@@ -59,7 +59,7 @@ function Screen({ second = false }: { second?: boolean }) {
                 : []),
               {
                 id: 'custom',
-                type: 'item',
+                type: 'custom',
                 identifier: 'axis-custom',
                 axisBehavior: customAxis,
                 render: () => (

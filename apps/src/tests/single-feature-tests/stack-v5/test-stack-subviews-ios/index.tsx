@@ -12,7 +12,10 @@ import {
   StackContainer,
   useStackNavigationContext,
 } from '@apps/shared/containers/stack';
-import { StackHeaderConfigProps } from 'react-native-screens/components/stack/header';
+import type {
+  StackHeaderConfigProps,
+  StackHeaderCustomItemIOS,
+} from 'react-native-screens/components/stack/header';
 import PressableWithFeedback from '@apps/shared/PressableWithFeedback';
 import { Button, ScrollView, StyleSheet } from 'react-native';
 import { SettingsSwitch } from '@apps/shared/SettingsSwitch';
@@ -101,6 +104,7 @@ interface Config {
   leadingItemsCount: number;
   trailingItemsCount: number;
   hidesSharedBackground: boolean;
+  paddingRemoved: boolean;
   title: TitleOption;
   subtitle: TitleOption;
   hitSlop: HitSlopValue;
@@ -132,6 +136,7 @@ const DEFAULT_CONFIG: Config = {
   leadingItemsCount: 2,
   trailingItemsCount: 2,
   hidesSharedBackground: false,
+  paddingRemoved: false,
   title: 'short',
   subtitle: 'short',
   hitSlop: '0',
@@ -174,12 +179,15 @@ function buildHeaderConfig(config: Config): StackHeaderConfigProps | undefined {
   let leadingItems: NonNullable<StackHeaderConfigProps['ios']>['leadingItems'] =
     Array.from({
       length: config.leadingItemsCount,
-    }).map((_, i) => ({
-      type: 'item',
-      id: `leading-${i}`,
-      hidesSharedBackground: config.hidesSharedBackground,
-      render: () => <ResizingItem />,
-    }));
+    }).map(
+      (_, i): StackHeaderCustomItemIOS => ({
+        type: 'custom',
+        id: `leading-${i}`,
+        hidesSharedBackground: config.hidesSharedBackground,
+        paddingRemoved: config.paddingRemoved,
+        render: () => <ResizingItem />,
+      }),
+    );
   if (leadingItems.length > 1) {
     leadingItems.splice(1, 0, {
       type: 'spacer',
@@ -192,10 +200,11 @@ function buildHeaderConfig(config: Config): StackHeaderConfigProps | undefined {
   let trailingItems: NonNullable<
     StackHeaderConfigProps['ios']
   >['trailingItems'] = Array.from({ length: config.trailingItemsCount }).map(
-    (_, i) => ({
-      type: 'item',
+    (_, i): StackHeaderCustomItemIOS => ({
+      type: 'custom',
       id: `trailing-${i}`,
       hidesSharedBackground: config.hidesSharedBackground,
+      paddingRemoved: config.paddingRemoved,
       render: () => <ResizingItem />,
     }),
   );
@@ -296,6 +305,11 @@ function ConfigScreen() {
         label="hidesSharedBackground"
         value={config.hidesSharedBackground}
         onValueChange={v => updateConfig('hidesSharedBackground', v)}
+      />
+      <SettingsSwitch
+        label="paddingRemoved"
+        value={config.paddingRemoved}
+        onValueChange={v => updateConfig('paddingRemoved', v)}
       />
       <SettingsSwitch
         label="large header enabled"

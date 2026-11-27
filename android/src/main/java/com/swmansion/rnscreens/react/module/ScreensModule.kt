@@ -5,10 +5,12 @@ import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
+import com.facebook.soloader.SoLoader
 import com.swmansion.rnscreens.NativeScreensModuleSpec
 import com.swmansion.rnscreens.legacy.NativeProxy // legacy-compat: v4 stack mounting listener (Fabric)
 import com.swmansion.rnscreens.legacy.ScreenFragment // legacy-compat: v4 manual transition progress
@@ -16,6 +18,7 @@ import com.swmansion.rnscreens.legacy.ScreenStack // legacy-compat: v4 manual tr
 import com.swmansion.rnscreens.legacy.events.ScreenTransitionProgressEvent // legacy-compat: v4 manual transition progress
 import java.util.concurrent.atomic.AtomicBoolean
 
+@OptIn(UnstableReactNativeAPI::class)
 @ReactModule(name = ScreensModule.NAME)
 class ScreensModule(
     private val reactContext: ReactApplicationContext,
@@ -26,16 +29,11 @@ class ScreensModule(
     private var proxy: NativeProxy? = null
 
     init {
-        try {
-            System.loadLibrary("rnscreens")
-            val jsContext = reactApplicationContext.javaScriptContextHolder
-            if (jsContext != null) {
-                nativeInstall(jsContext.get())
-            } else {
-                Log.e("[RNScreens]", "Could not install JSI bindings.")
-            }
-        } catch (exception: UnsatisfiedLinkError) {
-            Log.w("[RNScreens]", "Could not load RNScreens module.")
+        val jsContext = reactApplicationContext.javaScriptContextHolder
+        if (jsContext != null) {
+            nativeInstall(jsContext.get())
+        } else {
+            Log.e("[RNScreens]", "Could not install JSI bindings.")
         }
     }
 
@@ -67,6 +65,9 @@ class ScreensModule(
         val uiManager = UIManagerHelper.getUIManager(reactContext, UIManagerType.FABRIC) ?: return
         proxy?.apply {
             nativeAddMutationsListener(uiManager as FabricUIManager)
+            // setupFabric runs again on every host resume, so the listener is removed before it is added.
+            uiManager.removeUIManagerEventListener(this)
+            uiManager.addUIManagerEventListener(this)
         }
     }
 
@@ -160,5 +161,12 @@ class ScreensModule(
 
     companion object {
         const val NAME = "RNSModule"
+
+        init {
+            // Not System.loadLibrary: it can resolve to an install directory that a split install
+            // has replaced and deleted without killing the process. SoLoader recovers from that.
+            // See https://github.com/software-mansion/react-native-screens/issues/5117
+            SoLoader.loadLibrary("rnscreens")
+        }
     }
 }

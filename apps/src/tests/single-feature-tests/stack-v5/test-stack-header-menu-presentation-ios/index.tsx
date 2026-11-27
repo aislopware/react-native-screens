@@ -68,7 +68,7 @@ function TestStackHeaderMenuPresentationIOS() {
             trailingItems: [
               {
                 id: 'presentation-button',
-                type: 'item',
+                type: 'button',
                 title: 'Actions',
                 menu: menuPresent ? menu : undefined,
               },

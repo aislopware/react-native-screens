@@ -5,6 +5,7 @@ export const scenarioDescription: ScenarioDescription = {
   key: 'test-stack-header-menu-presentation-ios',
   details: 'Tests disabled and destructive menu leaves, subtitles, and reset.',
   platforms: ['ios'],
+  devices: ['iphone'],
   e2eCoverage: 'incomplete',
   smokeTest: false,
 };

@@ -3,7 +3,9 @@
   "version": "5.0.0-oni.58",
   "description": "Native navigation primitives for your React Native app.",
   "scripts": {
-    "submodules": "git submodule update --init --recursive && (cd react-navigation && yarn && yarn build && cd ../)",
+    "submodules": "yarn submodules:react-navigation && yarn submodules:testing",
+    "submodules:react-navigation": "git submodule update --init --recursive react-navigation && (cd react-navigation && yarn && yarn build && cd ../)",
+    "submodules:testing": "git submodule update --init --depth 1 react-native-screens-testing",
     "check-types": "tsc --noEmit",
     "start": "react-native start",
     "test:unit": "jest --passWithNoTests",
@@ -21,6 +23,7 @@
     "lint-ios": "yarn check-ios-layers",
     "check-ios-layers": "node ./scripts/check-ios-layers.js",
     "generate-spm-header-paths": "node ./scripts/generate-spm-header-paths.js",
+    "generate-spm-excluded-paths": "node ./scripts/generate-spm-excluded-paths.js",
     "sync-scenario-metadata": "node ./scripts/sync-scenario-metadata.cts",
     "sync-agent-skills": "node ./scripts/sync-agent-skills.js",
     "check-agent-config": "node ./scripts/sync-agent-skills.js --check",
@@ -251,6 +254,9 @@
         },
         "RNSContainedModalProvider": {
           "className": "RNSContainedModalProviderComponentView"
+        },
+        "RNSFullScreenModalHost": {
+          "className": "RNSFullScreenModalHostComponentView"
         }
       }
     }

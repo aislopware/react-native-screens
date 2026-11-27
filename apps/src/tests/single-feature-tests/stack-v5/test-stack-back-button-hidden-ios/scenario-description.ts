@@ -6,6 +6,7 @@ export const scenarioDescription: ScenarioDescription = {
   details:
     'Tests initial back-button visibility, live updates, prop removal, header config removal/remounting, and screen isolation.',
   platforms: ['ios'],
+  devices: ['iphone'],
   e2eCoverage: 'full',
   smokeTest: false,
 };

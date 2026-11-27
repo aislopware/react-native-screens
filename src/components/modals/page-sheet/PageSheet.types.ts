@@ -1,7 +1,6 @@
 import type { StyleProp, ViewProps } from 'react-native';
 import type { EmptyEventPayload, NativeEventHandler } from '../../shared/types';
 import type {
-  SheetBackgroundEffect,
   SheetDetentChangedEvent,
   SheetDetents,
   SheetInitialDetentIndex,
@@ -9,6 +8,7 @@ import type {
   SheetNativeContainerStyleProps,
   SheetPreferredCornerRadius,
 } from '../sheet';
+import type { PageSheetPropsIOS } from './PageSheet.ios.types';
 
 /**
  * Payload of the page sheet's `onDetentChanged` event.
@@ -53,14 +53,6 @@ export type PageSheetLargestUndimmedDetentIndex =
 export type PageSheetInitialDetentIndex = SheetInitialDetentIndex;
 
 /**
- * Material the system renders behind the page sheet's content.
- *
- * @remarks
- * Accepts any {@link SheetBackgroundEffect} value.
- */
-export type PageSheetBackgroundEffect = SheetBackgroundEffect;
-
-/**
  * Style of the native container hosting a page sheet's content.
  *
  * @remarks
@@ -69,9 +61,9 @@ export type PageSheetBackgroundEffect = SheetBackgroundEffect;
 export type PageSheetNativeContainerStyleProps = SheetNativeContainerStyleProps;
 
 /**
- * Props for {@link PageSheet}.
+ * Cross-platform props for {@link PageSheet}.
  */
-export interface PageSheetProps {
+export interface PageSheetPropsBase {
   /**
    * Content of the sheet.
    *
@@ -171,6 +163,21 @@ export interface PageSheetProps {
   prefersScrollingExpandsWhenScrolledToEdge?: boolean | undefined;
 
   /**
+   * Determines whether the sheet stays attached to the bottom edge of the
+   * screen in a compact-height environment, such as iPhone in landscape.
+   *
+   * @remarks
+   * When `false`, the sheet fills the screen in a compact-height environment.
+   * When `true`, it stays attached to the bottom edge and is as wide as the
+   * safe area. It has no effect in a regular-height environment.
+   *
+   * @defaultValue `false`
+   * @see {@link https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller/prefersedgeattachedincompactheight | UISheetPresentationController.prefersEdgeAttachedInCompactHeight}
+   * @platform ios
+   */
+  prefersEdgeAttachedInCompactHeight?: boolean | undefined;
+
+  /**
    * Prevents the user from dismissing the sheet natively by swiping down or
    * tapping the backdrop.
    *
@@ -192,19 +199,6 @@ export interface PageSheetProps {
   nativeContainerStyle?:
     | StyleProp<PageSheetNativeContainerStyleProps>
     | undefined;
-
-  /**
-   * Material the system renders behind the sheet's content.
-   *
-   * @remarks
-   * The material is drawn behind the native container, so an opaque
-   * `nativeContainerStyle.backgroundColor` covers it.
-   *
-   * @defaultValue `'automatic'`
-   * @see {@link https://developer.apple.com/documentation/uikit/uipresentationcontroller/backgroundeffect | UIPresentationController.backgroundEffect}
-   * @platform ios >= 26.1
-   */
-  backgroundEffect?: PageSheetBackgroundEffect | undefined;
 
   // Events
 
@@ -292,4 +286,16 @@ export interface PageSheetProps {
    * @platform android, ios
    */
   onNativeDismissPrevented?: NativeEventHandler<EmptyEventPayload> | undefined;
+}
+
+/**
+ * Props for {@link PageSheet}.
+ */
+export interface PageSheetProps extends PageSheetPropsBase {
+  /**
+   * iOS-specific props.
+   *
+   * @platform ios
+   */
+  ios?: PageSheetPropsIOS | undefined;
 }

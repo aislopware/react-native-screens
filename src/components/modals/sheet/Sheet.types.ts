@@ -137,6 +137,11 @@ export type SheetNativeContainerStyleProps = {
   backgroundColor?: ViewStyle['backgroundColor'] | undefined;
 };
 
+// iOS-specific props of `SheetBase`. Internal, like `SheetProps`.
+export interface SheetPropsIOS {
+  backgroundEffect?: SheetBackgroundEffect | undefined;
+}
+
 // Props of `SheetBase`. Internal: each sheet component declares and documents
 // its own props, sharing the compound types above.
 export interface SheetProps {
@@ -148,9 +153,10 @@ export interface SheetProps {
   largestUndimmedDetentIndex?: SheetLargestUndimmedDetentIndex | undefined;
   initialDetentIndex?: SheetInitialDetentIndex | undefined;
   prefersScrollingExpandsWhenScrolledToEdge?: boolean | undefined;
+  prefersEdgeAttachedInCompactHeight?: boolean | undefined;
   preventNativeDismiss?: boolean | undefined;
   nativeContainerStyle?: StyleProp<SheetNativeContainerStyleProps> | undefined;
-  backgroundEffect?: SheetBackgroundEffect | undefined;
+  ios?: SheetPropsIOS | undefined;
 
   // Events
   onWillAppear?: NativeEventHandler<EmptyEventPayload> | undefined;

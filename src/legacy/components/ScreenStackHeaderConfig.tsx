@@ -106,10 +106,7 @@ export const ScreenStackHeaderConfig = React.forwardRef<
           ...(preparedHeaderToolbarItems ?? []),
         ];
         const pressedItem = allItems.find(
-          item =>
-            item &&
-            'buttonId' in item &&
-            item.buttonId === buttonId,
+          item => item && 'buttonId' in item && item.buttonId === buttonId,
         );
         if (
           pressedItem &&
@@ -188,7 +185,9 @@ export const ScreenStackHeaderConfig = React.forwardRef<
               Boolean,
             );
             for (const toolbarMenu of toolbarMenus) {
-              const action = toolbarMenu ? findInMenu(toolbarMenu, event.nativeEvent.menuId) : undefined;
+              const action = toolbarMenu
+                ? findInMenu(toolbarMenu, event.nativeEvent.menuId)
+                : undefined;
               if (action) {
                 action.onPress();
                 return;

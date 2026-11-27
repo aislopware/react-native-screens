@@ -6,6 +6,7 @@ export const scenarioDescription: ScenarioDescription = {
   details:
     'Compares navigator/browser/editor styles, live updates, removal/remounting, and screen isolation.',
   platforms: ['ios'],
+  devices: ['iphone', 'ipad'],
   e2eCoverage: 'full',
   smokeTest: false,
 };

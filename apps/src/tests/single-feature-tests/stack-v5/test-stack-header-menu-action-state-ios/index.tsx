@@ -90,7 +90,7 @@ function TestStackHeaderMenuActionStateIOS() {
             trailingItems: [
               {
                 id: 'formatting-button',
-                type: 'item',
+                type: 'button',
                 title: 'Format',
                 menu: menuPresent ? menu : undefined,
               },

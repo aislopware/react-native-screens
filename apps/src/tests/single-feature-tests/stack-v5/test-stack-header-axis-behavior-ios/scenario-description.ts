@@ -6,6 +6,7 @@ export const scenarioDescription: ScenarioDescription = {
   details:
     'UIKit axis preferences for native and custom header items, including reset, removal and identifier-matched navigation. Requires iOS 27.1 and the iOS 27.1 SDK.',
   platforms: ['ios'],
+  devices: ['iphone-duo'],
   e2eCoverage: 'incomplete',
   smokeTest: false,
 };

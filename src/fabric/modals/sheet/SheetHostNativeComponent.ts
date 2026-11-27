@@ -54,6 +54,7 @@ interface NativeProps extends ViewProps {
   largestUndimmedDetentIndex?: CT.WithDefault<CT.Int32, -1>;
   initialDetentIndex?: CT.WithDefault<CT.Int32, 0>;
   prefersScrollingExpandsWhenScrolledToEdge?: CT.WithDefault<boolean, true>;
+  prefersEdgeAttachedInCompactHeight?: CT.WithDefault<boolean, false>;
   preventNativeDismiss?: CT.WithDefault<boolean, false>;
   nativeContainerBackgroundColor?: ColorValue | undefined;
   backgroundEffect?: CT.WithDefault<BackgroundEffect, 'automatic'>;
@@ -73,14 +74,6 @@ interface NativeProps extends ViewProps {
     | CT.DirectEventHandler<GenericEmptyEvent>
     | undefined;
   onDetentChanged?: CT.DirectEventHandler<DetentChangedEvent> | undefined;
-
-  // Workaround helper that triggers a synchronous event to flush a pending
-  // shadow-node state update in the current event beat. Mirrors iOS's
-  // `EventQueue::UpdateMode::unstable_Immediate`, which Android does not expose
-  // to Java/Kotlin as of now.
-  // TODO: Remove when a synchronous state update API is exposed on Android.
-  // https://github.com/facebook/react-native/pull/56311
-  onSyncFlush?: CT.DirectEventHandler<GenericEmptyEvent> | undefined;
 }
 
 export default codegenNativeComponent<NativeProps>('RNSSheetHost', {

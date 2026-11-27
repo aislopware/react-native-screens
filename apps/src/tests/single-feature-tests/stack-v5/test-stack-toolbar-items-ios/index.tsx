@@ -32,7 +32,7 @@ function ToolbarScreen({ name }: { name: string }) {
                 ? []
                 : [
                     {
-                      type: 'item',
+                      type: 'button',
                       id: 'filter',
                       title: filter ? 'All' : 'Unread',
                       onPress: () => setFilter(value => !value),
@@ -40,7 +40,7 @@ function ToolbarScreen({ name }: { name: string }) {
                     { type: 'spacer', id: 'fixed', sizing: 'fixed', width },
                     custom
                       ? {
-                          type: 'item',
+                          type: 'custom',
                           id: 'custom',
                           render: () => (
                             <Pressable
@@ -54,13 +54,13 @@ function ToolbarScreen({ name }: { name: string }) {
                           ),
                         }
                       : {
-                          type: 'item',
+                          type: 'button',
                           id: 'status',
                           title: `${name} toolbar`,
                         },
                     { type: 'spacer', id: 'flexible', sizing: 'flexible' },
                     {
-                      type: 'item',
+                      type: 'button',
                       id: 'actions',
                       title: 'Actions',
                       menu: {

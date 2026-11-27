@@ -1,7 +1,6 @@
 import type { StyleProp, ViewProps } from 'react-native';
 import type { EmptyEventPayload, NativeEventHandler } from '../../shared/types';
 import type {
-  SheetBackgroundEffect,
   SheetDetentChangedEvent,
   SheetDetents,
   SheetInitialDetentIndex,
@@ -9,6 +8,7 @@ import type {
   SheetNativeContainerStyleProps,
   SheetPreferredCornerRadius,
 } from '../sheet';
+import type { FormSheetPropsIOS } from './FormSheet.ios.types';
 
 /**
  * Payload of the form sheet's `onDetentChanged` event.
@@ -53,14 +53,6 @@ export type FormSheetLargestUndimmedDetentIndex =
 export type FormSheetInitialDetentIndex = SheetInitialDetentIndex;
 
 /**
- * Material the system renders behind the form sheet's content.
- *
- * @remarks
- * Accepts any {@link SheetBackgroundEffect} value.
- */
-export type FormSheetBackgroundEffect = SheetBackgroundEffect;
-
-/**
  * Style of the native container hosting a form sheet's content.
  *
  * @remarks
@@ -69,9 +61,9 @@ export type FormSheetBackgroundEffect = SheetBackgroundEffect;
 export type FormSheetNativeContainerStyleProps = SheetNativeContainerStyleProps;
 
 /**
- * Props for {@link FormSheet}.
+ * Cross-platform props for {@link FormSheet}.
  */
-export interface FormSheetProps {
+export interface FormSheetPropsBase {
   /**
    * Content of the sheet.
    *
@@ -182,6 +174,21 @@ export interface FormSheetProps {
   prefersScrollingExpandsWhenScrolledToEdge?: boolean | undefined;
 
   /**
+   * Determines whether the sheet stays attached to the bottom edge of the
+   * screen in a compact-height environment, such as iPhone in landscape.
+   *
+   * @remarks
+   * When `false`, the sheet fills the screen in a compact-height environment.
+   * When `true`, it stays attached to the bottom edge and is as wide as the
+   * safe area. It has no effect in a regular-height environment.
+   *
+   * @defaultValue `false`
+   * @see {@link https://developer.apple.com/documentation/uikit/uisheetpresentationcontroller/prefersedgeattachedincompactheight | UISheetPresentationController.prefersEdgeAttachedInCompactHeight}
+   * @platform ios
+   */
+  prefersEdgeAttachedInCompactHeight?: boolean | undefined;
+
+  /**
    * Prevents the user from dismissing the sheet natively by swiping down or
    * tapping the backdrop.
    *
@@ -203,19 +210,6 @@ export interface FormSheetProps {
   nativeContainerStyle?:
     | StyleProp<FormSheetNativeContainerStyleProps>
     | undefined;
-
-  /**
-   * Material the system renders behind the sheet's content.
-   *
-   * @remarks
-   * The material is drawn behind the native container, so an opaque
-   * `nativeContainerStyle.backgroundColor` covers it.
-   *
-   * @defaultValue `'automatic'`
-   * @see {@link https://developer.apple.com/documentation/uikit/uipresentationcontroller/backgroundeffect | UIPresentationController.backgroundEffect}
-   * @platform ios >= 26.1
-   */
-  backgroundEffect?: FormSheetBackgroundEffect | undefined;
 
   // Events
 
@@ -303,4 +297,16 @@ export interface FormSheetProps {
    * @platform android, ios
    */
   onNativeDismissPrevented?: NativeEventHandler<EmptyEventPayload> | undefined;
+}
+
+/**
+ * Props for {@link FormSheet}.
+ */
+export interface FormSheetProps extends FormSheetPropsBase {
+  /**
+   * iOS-specific props.
+   *
+   * @platform ios
+   */
+  ios?: FormSheetPropsIOS | undefined;
 }

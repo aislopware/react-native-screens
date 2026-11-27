@@ -69,7 +69,7 @@ function SearchScreen({ name }: { name: string }) {
             ) : undefined,
             trailingItems: [
               {
-                type: 'item',
+                type: 'button',
                 id: 'filters',
                 title: 'Filters',
                 menu: {
