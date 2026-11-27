@@ -2,10 +2,13 @@ import { by, device, element, expect, waitFor } from 'detox';
 import type { IosElementAttributes } from 'detox/detox';
 import { selectSingleFeatureTestsScreen } from '@e2e/app/test-screen-navigation';
 import { openHeaderItemMenu } from '@e2e/framework/context-menu-ios';
-import { describeIfIOS } from '@e2e/framework/platform';
+import { describeIfIOS, isIPadTarget } from '@e2e/framework/platform';
 import { waitUntil } from '@e2e/framework/wait';
 
 const searchField = () => element(by.type('UISearchTextField'));
+// A regular-width iPad places the field inline in the navigation bar, where
+// UIKit ignores hidesSearchBarWhenScrolling.
+const itIfNotIPad = isIPadTarget ? it.skip : it;
 
 async function tapControl(id: string) {
   await element(by.id('search-controls')).scrollTo('top');
@@ -100,18 +103,21 @@ describeIfIOS('Stack search bar (iOS)', () => {
     await expectUnfocused();
   });
 
-  it('updates scrolling options when only SearchBar props change', async () => {
-    await tapControl('toggle-scroll');
-    await expect(element(by.text('Hide when scrolling: true'))).toExist();
-    await expectUnfocused();
-    await element(by.id('search-controls')).scroll(300, 'down', 0.5, 0.55);
-    await expect(searchField()).not.toBeVisible();
-    await openHeaderItemMenu('Filters');
-    await element(by.text('Toggle hide when scrolling')).tap();
-    await expect(element(by.text('Hide when scrolling: false'))).toExist();
-    await expect(searchField()).toBeVisible();
-    await expectUnfocused();
-  });
+  itIfNotIPad(
+    'updates scrolling options when only SearchBar props change',
+    async () => {
+      await tapControl('toggle-scroll');
+      await expect(element(by.text('Hide when scrolling: true'))).toExist();
+      await expectUnfocused();
+      await element(by.id('search-controls')).scroll(300, 'down', 0.5, 0.55);
+      await expect(searchField()).not.toBeVisible();
+      await openHeaderItemMenu('Filters');
+      await element(by.text('Toggle hide when scrolling')).tap();
+      await expect(element(by.text('Hide when scrolling: false'))).toExist();
+      await expect(searchField()).toBeVisible();
+      await expectUnfocused();
+    },
+  );
 
   it('clears search when the entire header is unmounted', async () => {
     await tapControl('focus-search');

@@ -38,6 +38,12 @@ async function expectToolbarItem(title: string) {
   );
 }
 
+// The outgoing screen's toolbar buttons fade out after the navigation settles
+// (seen on iPad), so wait for them instead of checking at once.
+async function expectToolbarItemGone(title: string) {
+  await waitFor(toolbarItem(title)).not.toExist().withTimeout(2000);
+}
+
 async function tapToolbarControl(item: ReturnType<typeof element>) {
   if (!isIOSVersionAtLeast('26.0')) {
     await item.tap();
@@ -177,11 +183,11 @@ describeIfIOS('Stack Toolbar Items (iOS)', () => {
     await button('Push other toolbar').tap();
     await expectScreen('Second');
     await expectToolbarItem('Second toolbar');
-    await expect(toolbarItem('First toolbar')).not.toExist();
+    await expectToolbarItemGone('First toolbar');
     await button('Go back').tap();
     await expectScreen('First');
     await expectToolbarItem('First toolbar');
-    await expect(toolbarItem('Second toolbar')).not.toExist();
+    await expectToolbarItemGone('Second toolbar');
     await expectToolbarItem('All');
   });
 
@@ -196,7 +202,7 @@ describeIfIOS('Stack Toolbar Items (iOS)', () => {
     );
     await expectScreen('First');
     await expectToolbarItem('First toolbar');
-    await expect(toolbarItem('Second toolbar')).not.toExist();
+    await expectToolbarItemGone('Second toolbar');
   });
 
   itIfiOS26(
@@ -222,7 +228,7 @@ describeIfIOS('Stack Toolbar Items (iOS)', () => {
       );
       await expectScreen('First');
       await expectToolbarItem('First toolbar');
-      await expect(toolbarItem('Second toolbar')).not.toExist();
+      await expectToolbarItemGone('Second toolbar');
     },
   );
 
