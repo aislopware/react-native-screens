@@ -1,6 +1,6 @@
 {
   "name": "react-native-screens",
-  "version": "5.0.0-oni.59",
+  "version": "5.0.0-oni.60",
   "description": "Native navigation primitives for your React Native app.",
   "scripts": {
     "submodules": "yarn submodules:react-navigation && yarn submodules:testing",
